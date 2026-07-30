@@ -6,14 +6,17 @@ export async function POST(req: NextRequest) {
   try {
     const { messages, model, temperature, maxTokens, systemPrompt } = await req.json();
 
-    // Check for API key from server environment variable or client header override
-    const apiKey = process.env.GROQ_API_KEY || req.headers.get('x-groq-api-key');
+    // Check for API key from server environment variables or client header override
+    const apiKey =
+      process.env.GROQ_API_KEY ||
+      process.env.NEXT_PUBLIC_GROQ_API_KEY ||
+      req.headers.get('x-groq-api-key');
 
-    if (!apiKey) {
-      // Fallback message explaining how to add API Key in Vercel or local settings
+    if (!apiKey || !apiKey.trim()) {
+      // Fallback notice when Groq API key is missing
       return NextResponse.json({
         role: 'assistant',
-        content: `⚠️ **Groq API Key Not Found**\n\nTo enable full real-time Groq AI chat, please add your Groq API Key:\n\n### 🚀 Deploying on Vercel?\n1. Go to your **Vercel Dashboard** -> Project Settings -> **Environment Variables**.\n2. Add key: \`GROQ_API_KEY\`\n3. Value: \`gsk_...\` (Get your free key at [console.groq.com](https://console.groq.com/keys)).\n4. Redeploy your project!\n\n### ⚙️ Quick Local Test?\nOpen **Settings** (⚙️ bottom left icon) and enter your Groq API Key directly in the UI!`,
+        content: `⚠️ **Groq API Key Not Found**\n\nTo start chatting with Groq AI, please provide your API Key:\n\n### Option 1: Quick Fix (Works Instantly in Browser)\nClick the **⚙️ Settings** icon in the bottom-left sidebar and paste your key starting with \`gsk_...\` under **Groq API Key**.\n\n### Option 2: Permanent Fix on Vercel\n1. Open your **Vercel Dashboard** -> Project Settings -> **Environment Variables**.\n2. Add Key: \`GROQ_API_KEY\`\n3. Value: Your key from [console.groq.com/keys](https://console.groq.com/keys)\n4. **IMPORTANT:** Go to Vercel **Deployments** tab -> click **\`...\`** -> **Redeploy** (Environment variables take effect after redeploying!).`,
         isFallbackNotice: true,
       });
     }
@@ -45,7 +48,7 @@ export async function POST(req: NextRequest) {
       const errorData = await response.json().catch(() => ({}));
       const errorMessage = errorData.error?.message || response.statusText || 'Groq API request failed';
       return NextResponse.json(
-        { error: `Groq Error (${response.status}): ${errorMessage}` },
+        { error: `Groq API Error (${response.status}): ${errorMessage}` },
         { status: response.status }
       );
     }
