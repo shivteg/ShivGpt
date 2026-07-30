@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { SUPPORTED_MODELS } from '@/lib/groq';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   return NextResponse.json({
     models: SUPPORTED_MODELS,

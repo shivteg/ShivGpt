@@ -179,11 +179,12 @@ export default function Home() {
           )
         );
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `⚠️ Network error: ${err.message || 'Could not connect to server route.'}`,
+        content: `⚠️ Network error: ${errorMsg || 'Could not connect to server route.'}`,
         timestamp: Date.now(),
       };
 

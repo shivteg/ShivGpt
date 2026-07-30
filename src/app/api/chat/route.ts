@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const formattedMessages = [];
+    const formattedMessages: Array<{ role: string; content: string }> = [];
     if (systemPrompt) {
       formattedMessages.push({ role: 'system', content: systemPrompt });
     }
@@ -73,10 +73,11 @@ export async function POST(req: NextRequest) {
       },
     });
 
-  } catch (err: any) {
-    console.error('API Chat Route Error:', err);
+  } catch (err: unknown) {
+    const errorDetails = err instanceof Error ? err.message : String(err);
+    console.error('API Chat Route Error:', errorDetails);
     return NextResponse.json(
-      { error: err.message || 'Internal Server Error' },
+      { error: errorDetails || 'Internal Server Error' },
       { status: 500 }
     );
   }
