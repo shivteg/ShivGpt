@@ -82,9 +82,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
             <div>
               <h1 className="font-bold text-sm text-neutral-100 tracking-tight flex items-center gap-1.5">
-                Groq ChatGPT <span className="text-[10px] px-1.5 py-0.2 rounded bg-orange-500/20 text-orange-400 font-bold border border-orange-500/30">AI</span>
+                SAI (Shiv AI) <span className="text-[10px] px-1.5 py-0.2 rounded bg-orange-500/20 text-orange-400 font-bold border border-orange-500/30">AI</span>
               </h1>
-              <p className="text-[11px] text-neutral-500">Ultra-fast Groq Inference</p>
+              <p className="text-[11px] text-neutral-500">Ultra-fast SAI (Shiv AI) Inference</p>
             </div>
           </div>
           <button

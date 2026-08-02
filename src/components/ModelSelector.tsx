@@ -48,7 +48,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
       {isOpen && (
         <div className="absolute left-0 top-full mt-2 w-72 md:w-80 bg-[#1e1e1e] border border-neutral-700 rounded-xl shadow-2xl z-50 p-1.5 backdrop-blur-xl">
           <div className="px-3 py-2 border-b border-neutral-800 text-xs font-semibold text-neutral-400 uppercase tracking-wider flex items-center justify-between">
-            <span>Select Groq Model</span>
+            <span>Select SAI (Shiv AI) Model</span>
             <Sparkles className="w-3.5 h-3.5 text-orange-400" />
           </div>
 

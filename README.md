@@ -1,12 +1,12 @@
-# ⚡ Groq ChatGPT AI - Next.js AI Web App
+# ⚡ SAI (Shiv AI) - Next.js AI Web App
 
-A high-performance, ChatGPT-style web interface powered by **Groq Cloud API** and Meta/DeepSeek open models (**Llama 3.3 70B**, **Llama 3.1 8B**, **DeepSeek R1 Distill**). Built with Next.js 14, TypeScript, Tailwind CSS, and Lucide Icons. Ready for 1-click deployment on **Vercel**.
+A high-performance, ChatGPT-style web interface powered by **SAI (Shiv AI)** with Meta/DeepSeek open models (**Llama 3.3 70B**, **Llama 3.1 8B**, **DeepSeek R1 Distill**). Built with Next.js 14, TypeScript, Tailwind CSS, and Lucide Icons. Ready for 1-click deployment on **Vercel**.
 
 ---
 
 ## 🌟 Key Features
 
-- ⚡ **Ultra-Fast Groq Inference**: Real-time responses up to 800+ tokens/sec.
+- ⚡ **Ultra-Fast SAI (Shiv AI) Inference**: Real-time responses up to 800+ tokens/sec.
 - 🤖 **Multi-Model Selector**: Switch between Meta Llama 3.3 70B, Llama 3.1 8B, DeepSeek R1 Distill 70B, Mixtral 8x7b, and Gemma 2.
 - 🎨 **ChatGPT UI & Dark Mode**: Sleek glassmorphism theme, markdown support, syntax highlighting, and copy-code buttons.
 - 📊 **Performance Analytics**: Live tokens/sec counter, completion tokens count, and API latency badges.

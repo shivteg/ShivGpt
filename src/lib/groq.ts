@@ -42,4 +42,4 @@ export const SUPPORTED_MODELS: GroqModelInfo[] = [
 ];
 
 export const DEFAULT_SYSTEM_PROMPT = 
-  "You are a helpful, brilliant, and precise AI assistant powered by Groq's lightning-fast inference engine. Provide clear, direct, and well-structured answers using GitHub-flavored Markdown. When providing code, specify language tags and write clean, modern code.";
+  "You are a helpful, brilliant, and precise AI assistant known as SAI (Shiv AI), powered by lightning-fast inference. Provide clear, direct, and well-structured answers using GitHub-flavored Markdown. When providing code, specify language tags and write clean, modern code.";

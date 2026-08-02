@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
       // Fallback notice when Groq API key is missing
       return NextResponse.json({
         role: 'assistant',
-        content: `⚠️ **Groq API Key Not Found**\n\nTo start chatting with Groq AI, please provide your API Key:\n\n### Option 1: Quick Fix (Works Instantly in Browser)\nClick the **⚙️ Settings** icon in the bottom-left sidebar and paste your key starting with \`gsk_...\` under **Groq API Key**.\n\n### Option 2: Permanent Fix on Vercel\n1. Open your **Vercel Dashboard** -> Project Settings -> **Environment Variables**.\n2. Add Key: \`GROQ_API_KEY\`\n3. Value: Your key from [console.groq.com/keys](https://console.groq.com/keys)\n4. **IMPORTANT:** Go to Vercel **Deployments** tab -> click **\`...\`** -> **Redeploy** (Environment variables take effect after redeploying!).`,
+        content: `⚠️ **SAI (Shiv AI) API Key Not Found**\n\nTo start chatting with SAI (Shiv AI), please provide your API Key:\n\n### Option 1: Quick Fix (Works Instantly in Browser)\nClick the **⚙️ Settings** icon in the bottom-left sidebar and paste your key starting with \`gsk_...\` under **Groq API Key**.\n\n### Option 2: Permanent Fix on Vercel\n1. Open your **Vercel Dashboard** -> Project Settings -> **Environment Variables**.\n2. Add Key: \`GROQ_API_KEY\`\n3. Value: Your key from [console.groq.com/keys](https://console.groq.com/keys)\n4. **IMPORTANT:** Go to Vercel **Deployments** tab -> click **\`...\`** -> **Redeploy** (Environment variables take effect after redeploying!).`,
         isFallbackNotice: true,
       });
     }
@@ -46,9 +46,9 @@ export async function POST(req: NextRequest) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      const errorMessage = errorData.error?.message || response.statusText || 'Groq API request failed';
+      const errorMessage = errorData.error?.message || response.statusText || 'SAI API request failed';
       return NextResponse.json(
-        { error: `Groq API Error (${response.status}): ${errorMessage}` },
+        { error: `SAI API Error (${response.status}): ${errorMessage}` },
         { status: response.status }
       );
     }
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     const endTime = Date.now();
     const latencyMs = endTime - startTime;
 
-    const assistantContent = data.choices?.[0]?.message?.content || 'No response received from Groq.';
+    const assistantContent = data.choices?.[0]?.message?.content || 'No response received from SAI (Shiv AI).';
     const usage = data.usage || {};
     const totalTokens = usage.total_tokens || 0;
     const completionTokens = usage.completion_tokens || 0;

@@ -77,7 +77,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-sm text-neutral-200">
-              {isUser ? 'You' : 'Groq AI'}
+              {isUser ? 'You' : 'SAI (Shiv AI)'}
             </span>
             {message.model && !isUser && (
               <span className="text-[11px] px-2 py-0.5 rounded-full bg-neutral-800 text-neutral-400 border border-neutral-700">

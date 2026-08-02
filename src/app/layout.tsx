@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Groq ChatGPT AI - Ultra Fast AI Assistant',
-  description: 'ChatGPT-like AI interface powered by Groq Llama 3.3 70B & DeepSeek reasoning models. Ready for Vercel deployment.',
+  title: 'SAI (Shiv AI) - Ultra Fast AI Assistant',
+  description: 'ChatGPT-like AI interface powered by SAI (Shiv AI) Llama 3.3 70B & DeepSeek reasoning models. Ready for Vercel deployment.',
 };
 
 export default function RootLayout({

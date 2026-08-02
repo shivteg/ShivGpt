@@ -117,7 +117,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         <div className="flex items-center gap-2">
           <div className="hidden sm:flex items-center gap-1.5 text-xs text-orange-400 bg-orange-950/40 px-2.5 py-1 rounded-full border border-orange-900/50">
             <Zap className="w-3.5 h-3.5 fill-orange-400" />
-            <span className="font-semibold">Groq Powered</span>
+            <span className="font-semibold">SAI (Shiv AI) Powered</span>
           </div>
         </div>
       </header>
@@ -135,7 +135,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               What would you like to build today?
             </h2>
             <p className="text-neutral-400 text-sm max-w-md mb-10 leading-relaxed">
-              Powered by Groq's lightning-fast open models. Select a suggestion below or type your own question.
+              Powered by SAI (Shiv AI)'s lightning-fast open models. Select a suggestion below or type your own question.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
@@ -179,7 +179,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 </div>
                 <div className="flex items-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin text-orange-400" />
-                  <span>Groq AI is thinking...</span>
+                  <span>SAI (Shiv AI) is thinking...</span>
                 </div>
               </div>
             )}
@@ -211,7 +211,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               value={input}
               onChange={handleTextareaInput}
               onKeyDown={handleKeyDown}
-              placeholder="Message Groq AI..."
+              placeholder="Message SAI (Shiv AI)..."
               className="w-full bg-transparent text-neutral-100 text-sm placeholder-neutral-500 px-3 py-2 focus:outline-none resize-none max-h-48 leading-relaxed font-sans"
             />
             <button
@@ -228,7 +228,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           </form>
 
           <p className="text-[11px] text-center text-neutral-500">
-            Groq AI can make mistakes. Verify important information. Designed for Vercel deployment with <code className="text-orange-400 font-mono">GROQ_API_KEY</code>.
+            SAI (Shiv AI) can make mistakes. Verify important information. Designed for Vercel deployment with <code className="text-orange-400 font-mono">GROQ_API_KEY</code>.
           </p>
         </div>
       </div>
