@@ -228,7 +228,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           </form>
 
           <p className="text-[11px] text-center text-neutral-500">
-            SAI (Shiv AI) can make mistakes. Verify important information. Designed for Vercel deployment with <code className="text-orange-400 font-mono">GROQ_API_KEY</code>.
+            SAI (Shiv AI) can make mistakes. Verify important information.
           </p>
         </div>
       </div>
