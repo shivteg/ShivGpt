@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ChatSession, Message, Settings } from '@/lib/types';
+import { ChatSession, Message, Settings, AuthUser } from '@/lib/types';
 import { DEFAULT_SYSTEM_PROMPT, isImageModel } from '@/lib/groq';
+import { getStoredUser, supabaseSignOut } from '@/lib/supabase';
 import { Sidebar } from '@/components/Sidebar';
 import { ChatInterface } from '@/components/ChatInterface';
 import { SettingsModal } from '@/components/SettingsModal';
+import { AuthModal } from '@/components/AuthModal';
 
 const DEFAULT_SETTINGS: Settings = {
   systemPrompt: DEFAULT_SYSTEM_PROMPT,
@@ -20,13 +22,20 @@ export default function Home() {
   const [activeSessionId, setActiveSessionId] = useState<string>('');
   const [selectedModel, setSelectedModel] = useState<string>('llama-3.3-70b-versatile');
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+  const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Initialize from LocalStorage
+  // Initialize from LocalStorage and Supabase session
   useEffect(() => {
     try {
+      const savedUser = getStoredUser();
+      if (savedUser) {
+        setUser(savedUser);
+      }
+
       const savedSessions = localStorage.getItem('groq_chat_sessions');
       const savedSettings = localStorage.getItem('groq_chat_settings');
 
@@ -63,6 +72,11 @@ export default function Home() {
   useEffect(() => {
     localStorage.setItem('groq_chat_settings', JSON.stringify(settings));
   }, [settings]);
+
+  const handleSignOut = async () => {
+    await supabaseSignOut(user?.accessToken);
+    setUser(null);
+  };
 
   const createNewSession = () => {
     const newSession: ChatSession = {
@@ -349,6 +363,9 @@ export default function Home() {
         onRenameSession={handleRenameSession}
         onClearAll={handleClearAll}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        user={user}
+        onOpenAuth={() => setIsAuthOpen(true)}
+        onSignOut={handleSignOut}
         isOpen={isSidebarOpen}
         onToggleOpen={() => setIsSidebarOpen(!isSidebarOpen)}
       />
@@ -369,7 +386,15 @@ export default function Home() {
         settings={settings}
         onSaveSettings={setSettings}
       />
+
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+        user={user}
+        onAuthSuccess={(authUser) => setUser(authUser)}
+      />
     </div>
   );
 }
+
 

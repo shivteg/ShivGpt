@@ -47,4 +47,10 @@ export interface Settings {
   streamResponse: boolean;
   defaultImageModel?: string;
 }
-
+export interface AuthUser {
+  id: string;
+  email: string;
+  username?: string;
+  accessToken?: string;
+  createdAt?: string;
+}

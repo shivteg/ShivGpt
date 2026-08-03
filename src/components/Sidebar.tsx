@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ChatSession } from '@/lib/types';
+import { ChatSession, AuthUser } from '@/lib/types';
 import {
   Plus,
   MessageSquare,
@@ -13,7 +13,10 @@ import {
   X,
   ExternalLink,
   ChevronLeft,
-  ChevronRight,
+  User,
+  LogIn,
+  LogOut,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -25,6 +28,9 @@ interface SidebarProps {
   onRenameSession: (id: string, title: string) => void;
   onClearAll: () => void;
   onOpenSettings: () => void;
+  user: AuthUser | null;
+  onOpenAuth: () => void;
+  onSignOut: () => void;
   isOpen: boolean;
   onToggleOpen: () => void;
 }
@@ -38,6 +44,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onRenameSession,
   onClearAll,
   onOpenSettings,
+  user,
+  onOpenAuth,
+  onSignOut,
   isOpen,
   onToggleOpen,
 }) => {
@@ -82,9 +91,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
             <div>
               <h1 className="font-bold text-sm text-neutral-100 tracking-tight flex items-center gap-1.5">
-                SAI (Shiv AI) <span className="text-[10px] px-1.5 py-0.2 rounded bg-orange-500/20 text-orange-400 font-bold border border-orange-500/30">AI</span>
+                ShivGpt AI <span className="text-[10px] px-1.5 py-0.2 rounded bg-orange-500/20 text-orange-400 font-bold border border-orange-500/30">PRO</span>
               </h1>
-              <p className="text-[11px] text-neutral-500">Ultra-fast SAI (Shiv AI) Inference</p>
+              <p className="text-[11px] text-neutral-500">Groq LLMs & Supabase Auth</p>
             </div>
           </div>
           <button
@@ -93,6 +102,46 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* User Profile / Supabase Auth Card */}
+        <div className="p-3 border-b border-neutral-800 bg-[#1f1f1f]/50">
+          {user ? (
+            <div className="flex items-center justify-between p-2 rounded-xl bg-neutral-900 border border-neutral-800">
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white font-bold text-xs shadow-md">
+                  {user.username ? user.username.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-semibold text-neutral-200 truncate flex items-center gap-1">
+                    <span>{user.username || user.email.split('@')[0]}</span>
+                    <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                  </div>
+                  <div className="text-[10px] text-neutral-500 truncate">{user.email}</div>
+                </div>
+              </div>
+              <button
+                onClick={onSignOut}
+                className="p-1.5 rounded-lg text-neutral-400 hover:text-red-400 hover:bg-neutral-800 transition-colors"
+                title="Log Out of Supabase"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={onOpenAuth}
+              className="w-full flex items-center justify-between p-2.5 rounded-xl bg-gradient-to-r from-orange-950/40 to-amber-950/40 border border-orange-900/50 hover:border-orange-500 text-orange-200 text-xs font-medium transition-all group"
+            >
+              <div className="flex items-center gap-2">
+                <LogIn className="w-4 h-4 text-orange-400 group-hover:scale-110 transition-transform" />
+                <span>Supabase Log In / Sign Up</span>
+              </div>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 font-bold">
+                Auth
+              </span>
+            </button>
+          )}
         </div>
 
         {/* New Chat Button */}
@@ -209,7 +258,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <SettingsIcon className="w-4 h-4 text-orange-400" />
               <span>Settings</span>
             </div>
-            <span className="text-[10px] text-neutral-500">API Key & Model</span>
+            <span className="text-[10px] text-neutral-500">API Keys & Models</span>
           </button>
 
           <a
@@ -226,3 +275,4 @@ export const Sidebar: React.FC<SidebarProps> = ({
     </>
   );
 };
+
