@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Settings } from '@/lib/types';
-import { X, Key, Sliders, MessageSquareCode, Save, Info, ExternalLink } from 'lucide-react';
+import { X, Key, Sliders, MessageSquareCode, Save, Info, ExternalLink, Image as ImageIcon } from 'lucide-react';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -34,7 +34,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-800 bg-[#252525]">
           <div className="flex items-center gap-2 text-neutral-100 font-semibold text-lg">
             <Sliders className="w-5 h-5 text-orange-500" />
-            <span>AI Assistant Settings</span>
+            <span>ShivGpt AI Settings</span>
           </div>
           <button
             onClick={onClose}
@@ -50,26 +50,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <div className="p-4 rounded-xl bg-orange-950/20 border border-orange-900/40 text-orange-200 text-xs space-y-2">
             <div className="flex items-center gap-2 font-semibold text-orange-400 text-sm">
               <Info className="w-4 h-4" />
-              <span>Vercel Environment Variable Notice</span>
+              <span>Environment Variables Notice</span>
             </div>
-            <p>
-              When deployed on Vercel, simply set <code className="bg-black/40 px-1 py-0.5 rounded text-orange-300 font-mono">GROQ_API_KEY</code> in your Vercel Project Settings. You don't need to type it below unless you want a local browser override.
+            <p className="leading-relaxed">
+              To activate features via environment variables, set the following in your Vercel Project Settings or <code className="bg-black/40 px-1 py-0.5 rounded text-orange-300 font-mono">.env.local</code>:
             </p>
-            <a
-              href="https://console.groq.com/keys"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-orange-400 hover:underline font-medium pt-1"
-            >
-              Get free Groq API Key <ExternalLink className="w-3 h-3" />
-            </a>
+            <ul className="list-disc list-inside space-y-1 font-mono text-[11px] text-orange-300">
+              <li><span className="font-bold">Text API:</span> <code className="bg-black/50 px-1 rounded">GROQ_API_KEY</code></li>
+              <li><span className="font-bold">Image API:</span> <code className="bg-black/50 px-1 rounded">IMAGE_GEN_API_KEY</code> or <code className="bg-black/50 px-1 rounded">TOGETHER_API_KEY</code> / <code className="bg-black/50 px-1 rounded">OPENAI_API_KEY</code></li>
+            </ul>
           </div>
 
-          {/* API Key Override */}
+          {/* Groq API Key Override */}
           <div className="space-y-2">
             <label className="block font-medium text-neutral-300 flex items-center gap-2">
               <Key className="w-4 h-4 text-orange-400" />
-              <span>Groq API Key (Optional Local Override)</span>
+              <span>Groq Text API Key (Optional Local Override)</span>
             </label>
             <input
               type="password"
@@ -79,7 +75,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               className="w-full px-4 py-2.5 rounded-lg bg-neutral-900 border border-neutral-700 text-neutral-100 focus:outline-none focus:border-orange-500 transition-colors font-mono text-xs"
             />
             <p className="text-[11px] text-neutral-500">
-              Stored safely in your local browser storage for client-side API requests.
+              Overrides server <code className="font-mono">GROQ_API_KEY</code> for text generation.
+            </p>
+          </div>
+
+          {/* Image API Key Override */}
+          <div className="space-y-2">
+            <label className="block font-medium text-neutral-300 flex items-center gap-2">
+              <ImageIcon className="w-4 h-4 text-pink-400" />
+              <span>Image Generation API Key (Optional Local Override)</span>
+            </label>
+            <input
+              type="password"
+              placeholder="Together AI / OpenAI / HuggingFace key..."
+              value={formData.customImageApiKey || ''}
+              onChange={(e) => setFormData({ ...formData, customImageApiKey: e.target.value })}
+              className="w-full px-4 py-2.5 rounded-lg bg-neutral-900 border border-neutral-700 text-neutral-100 focus:outline-none focus:border-pink-500 transition-colors font-mono text-xs"
+            />
+            <p className="text-[11px] text-neutral-500">
+              Overrides server <code className="font-mono">IMAGE_GEN_API_KEY</code> or <code className="font-mono">TOGETHER_API_KEY</code> / <code className="font-mono">OPENAI_API_KEY</code>.
             </p>
           </div>
 
@@ -158,3 +172,4 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     </div>
   );
 };
+

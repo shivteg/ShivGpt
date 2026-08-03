@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ChatSession, Message, Settings } from '@/lib/types';
-import { DEFAULT_SYSTEM_PROMPT } from '@/lib/groq';
+import { DEFAULT_SYSTEM_PROMPT, isImageModel } from '@/lib/groq';
 import { Sidebar } from '@/components/Sidebar';
 import { ChatInterface } from '@/components/ChatInterface';
 import { SettingsModal } from '@/components/SettingsModal';
@@ -120,6 +120,100 @@ export default function Home() {
 
     setIsLoading(true);
 
+    const isImageReq =
+      isImageModel(selectedModel) ||
+      userText.toLowerCase().startsWith('/image ') ||
+      userText.toLowerCase().startsWith('/draw ') ||
+      userText.toLowerCase().startsWith('/generate ');
+
+    if (isImageReq) {
+      // Clean prompt from slash commands if used
+      let imagePrompt = userText;
+      if (userText.toLowerCase().startsWith('/image ')) imagePrompt = userText.substring(7).trim();
+      else if (userText.toLowerCase().startsWith('/draw ')) imagePrompt = userText.substring(6).trim();
+      else if (userText.toLowerCase().startsWith('/generate ')) imagePrompt = userText.substring(10).trim();
+
+      try {
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        };
+
+        if (settings.customImageApiKey) {
+          headers['x-image-api-key'] = settings.customImageApiKey;
+        }
+
+        const response = await fetch('/api/generate-image', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            prompt: imagePrompt,
+            model: isImageModel(selectedModel) ? selectedModel : 'flux-1-schnell',
+            width: 1024,
+            height: 1024,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.imageUrl) {
+          const assistantMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: `🎨 Generated Image for: "${data.prompt}"`,
+            isImage: true,
+            imageUrl: data.imageUrl,
+            imagePrompt: data.prompt,
+            model: data.provider || data.model || selectedModel,
+            usage: { latencyMs: data.latencyMs },
+            timestamp: Date.now(),
+          };
+
+          setSessions((prev) =>
+            prev.map((s) =>
+              s.id === activeSessionId
+                ? { ...s, messages: [...s.messages, assistantMessage] }
+                : s
+            )
+          );
+        } else {
+          const errorMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: `⚠️ Image Generation Error: ${data.error || 'Failed to generate image'}`,
+            timestamp: Date.now(),
+          };
+
+          setSessions((prev) =>
+            prev.map((s) =>
+              s.id === activeSessionId
+                ? { ...s, messages: [...s.messages, errorMessage] }
+                : s
+            )
+          );
+        }
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: `⚠️ Image Generation Error: ${errorMsg || 'Could not connect to image server.'}`,
+          timestamp: Date.now(),
+        };
+
+        setSessions((prev) =>
+          prev.map((s) =>
+            s.id === activeSessionId
+              ? { ...s, messages: [...s.messages, errorMessage] }
+              : s
+          )
+        );
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    // Text Chat Route
     try {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -278,3 +372,4 @@ export default function Home() {
     </div>
   );
 }
+

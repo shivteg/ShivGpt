@@ -4,6 +4,9 @@ export interface Message {
   content: string;
   timestamp: number;
   model?: string;
+  isImage?: boolean;
+  imageUrl?: string;
+  imagePrompt?: string;
   usage?: {
     totalTokens?: number;
     promptTokens?: number;
@@ -30,13 +33,18 @@ export interface GroqModelInfo {
   contextWindow: number;
   speed: string;
   badge?: string;
+  type?: 'text' | 'image';
+  provider?: string;
 }
 
 export interface Settings {
   customApiKey?: string;
+  customImageApiKey?: string;
   systemPrompt: string;
   temperature: number;
   maxTokens: number;
   theme: 'dark' | 'light';
   streamResponse: boolean;
+  defaultImageModel?: string;
 }
+
