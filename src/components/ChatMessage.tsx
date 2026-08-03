@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Message } from '@/lib/types';
 import { CodeBlock } from './CodeBlock';
-import { User, Copy, Check, Zap, Clock, Download, Maximize2, Sparkles, Image as ImageIcon, ExternalLink } from 'lucide-react';
+import { User, Copy, Check, Zap, Clock, Download, Maximize2, Sparkles, Image as ImageIcon, ExternalLink, Video, Film } from 'lucide-react';
 
 interface ChatMessageProps {
   message: Message;
@@ -16,26 +16,27 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const isUser = message.role === 'user';
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(message.imageUrl || message.content);
+    navigator.clipboard.writeText(message.videoUrl || message.imageUrl || message.content);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleDownload = async () => {
-    if (!message.imageUrl) return;
+    const targetUrl = message.videoUrl || message.imageUrl;
+    if (!targetUrl) return;
     try {
-      const response = await fetch(message.imageUrl);
+      const response = await fetch(targetUrl);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `shivgpt-generated-art-${Date.now()}.jpg`;
+      a.download = `shivgpt-generated-${message.isVideo ? 'video' : 'art'}-${Date.now()}.${message.isVideo ? 'mp4' : 'jpg'}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (e) {
-      window.open(message.imageUrl, '_blank');
+      window.open(targetUrl, '_blank');
     }
   };
 
@@ -86,6 +87,10 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
             <div className="w-8 h-8 rounded-full bg-orange-600/30 border border-orange-500/50 flex items-center justify-center text-orange-400 font-semibold shadow-md">
               <User className="w-4 h-4" />
             </div>
+          ) : message.isVideo ? (
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 flex items-center justify-center text-white shadow-md shadow-purple-950/50">
+              <Video className="w-4 h-4 text-white" />
+            </div>
           ) : message.isImage ? (
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 via-rose-500 to-amber-500 flex items-center justify-center text-white shadow-md shadow-pink-950/50">
               <ImageIcon className="w-4 h-4 text-white" />
@@ -102,11 +107,21 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-sm text-neutral-200">
-                {isUser ? 'You' : message.isImage ? 'ShivGpt AI Image Studio' : 'SAI (Shiv AI)'}
+                {isUser
+                  ? 'You'
+                  : message.isVideo
+                  ? 'ShivGpt AI Video Studio (Kling AI)'
+                  : message.isImage
+                  ? 'ShivGpt AI Image Studio'
+                  : 'SAI (Shiv AI)'}
               </span>
               {message.model && !isUser && (
                 <span className="text-[11px] px-2 py-0.5 rounded-full bg-neutral-800 text-neutral-400 border border-neutral-700 flex items-center gap-1">
-                  {message.isImage && <Sparkles className="w-3 h-3 text-pink-400" />}
+                  {message.isVideo ? (
+                    <Film className="w-3 h-3 text-purple-400" />
+                  ) : message.isImage ? (
+                    <Sparkles className="w-3 h-3 text-pink-400" />
+                  ) : null}
                   <span>{message.model}</span>
                 </span>
               )}
@@ -115,14 +130,56 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
             <button
               onClick={handleCopy}
               className="p-1 rounded text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800 transition-colors"
-              title="Copy message or image URL"
+              title="Copy link or text"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
             </button>
           </div>
 
-          {/* Generated Image Content */}
-          {message.isImage && message.imageUrl ? (
+          {/* Generated Video Content */}
+          {message.isVideo && message.videoUrl ? (
+            <div className="mt-3 space-y-3">
+              <div className="text-xs text-neutral-400 italic bg-neutral-900/60 px-3 py-1.5 rounded-lg border border-neutral-800/80 inline-flex items-center gap-2">
+                <Video className="w-3.5 h-3.5 text-purple-400" />
+                <span>Video Prompt: "{message.videoPrompt || message.content}"</span>
+              </div>
+
+              <div className="relative group max-w-xl rounded-2xl overflow-hidden border border-neutral-800 bg-neutral-900 shadow-2xl">
+                <video
+                  src={message.videoUrl}
+                  controls
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full rounded-2xl object-cover max-h-[450px]"
+                />
+
+                <div className="p-3 bg-neutral-950/80 flex items-center justify-between border-t border-neutral-800 text-xs">
+                  <span className="text-neutral-400 truncate max-w-xs">{message.model || 'Kling AI Video'}</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleDownload}
+                      className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium flex items-center gap-1.5 transition-colors shadow-md"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download MP4</span>
+                    </button>
+                    <a
+                      href={message.videoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition-colors"
+                      title="Open video link"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : message.isImage && message.imageUrl ? (
+            /* Generated Image Content */
             <div className="mt-3 space-y-3">
               <div className="text-xs text-neutral-400 italic bg-neutral-900/60 px-3 py-1.5 rounded-lg border border-neutral-800/80 inline-flex items-center gap-2">
                 <Sparkles className="w-3.5 h-3.5 text-orange-400" />
@@ -254,4 +311,3 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     </>
   );
 };
-

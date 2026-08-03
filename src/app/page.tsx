@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ChatSession, Message, Settings, AuthUser } from '@/lib/types';
-import { DEFAULT_SYSTEM_PROMPT, isImageModel } from '@/lib/groq';
+import { DEFAULT_SYSTEM_PROMPT, isImageModel, isVideoModel } from '@/lib/groq';
 import { getStoredUser, supabaseSignOut } from '@/lib/supabase';
 import { Sidebar } from '@/components/Sidebar';
 import { ChatInterface } from '@/components/ChatInterface';
@@ -133,6 +133,97 @@ export default function Home() {
     );
 
     setIsLoading(true);
+
+    const isVideoReq =
+      isVideoModel(selectedModel) ||
+      userText.toLowerCase().startsWith('/video ') ||
+      userText.toLowerCase().startsWith('/create-video ') ||
+      userText.toLowerCase().startsWith('/clip ');
+
+    if (isVideoReq) {
+      let videoPrompt = userText;
+      if (userText.toLowerCase().startsWith('/video ')) videoPrompt = userText.substring(7).trim();
+      else if (userText.toLowerCase().startsWith('/create-video ')) videoPrompt = userText.substring(14).trim();
+      else if (userText.toLowerCase().startsWith('/clip ')) videoPrompt = userText.substring(6).trim();
+
+      try {
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        };
+
+        if (settings.customVideoApiKey || settings.customImageApiKey) {
+          headers['x-video-api-key'] = settings.customVideoApiKey || settings.customImageApiKey || '';
+        }
+
+        const response = await fetch('/api/generate-video', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            prompt: videoPrompt,
+            model: isVideoModel(selectedModel) ? selectedModel : 'kling-v1-5',
+            duration: '5',
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.videoUrl) {
+          const assistantMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: `🎥 Generated Kling AI Video for: "${data.prompt}"`,
+            isVideo: true,
+            videoUrl: data.videoUrl,
+            videoPrompt: data.prompt,
+            model: data.provider || data.model || selectedModel,
+            usage: { latencyMs: data.latencyMs },
+            timestamp: Date.now(),
+          };
+
+          setSessions((prev) =>
+            prev.map((s) =>
+              s.id === activeSessionId
+                ? { ...s, messages: [...s.messages, assistantMessage] }
+                : s
+            )
+          );
+        } else {
+          const errorMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: `⚠️ Video Generation Error: ${data.error || 'Failed to generate video'}`,
+            timestamp: Date.now(),
+          };
+
+          setSessions((prev) =>
+            prev.map((s) =>
+              s.id === activeSessionId
+                ? { ...s, messages: [...s.messages, errorMessage] }
+                : s
+            )
+          );
+        }
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: `⚠️ Video Generation Error: ${errorMsg || 'Could not connect to video server.'}`,
+          timestamp: Date.now(),
+        };
+
+        setSessions((prev) =>
+          prev.map((s) =>
+            s.id === activeSessionId
+              ? { ...s, messages: [...s.messages, errorMessage] }
+              : s
+          )
+        );
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
 
     const isImageReq =
       isImageModel(selectedModel) ||

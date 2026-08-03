@@ -94,10 +94,47 @@ export const IMAGE_MODELS: GroqModelInfo[] = [
   },
 ];
 
-export const SUPPORTED_MODELS: GroqModelInfo[] = [...TEXT_MODELS, ...IMAGE_MODELS];
+export const VIDEO_MODELS: GroqModelInfo[] = [
+  {
+    id: 'kling-v1-5',
+    name: 'Kling AI Video v1.5 / v2',
+    description: 'State-of-the-art cinematic AI video generation powered by Kling AI.',
+    contextWindow: 0,
+    speed: '~10-30 sec',
+    badge: 'Kling AI',
+    type: 'video',
+    provider: 'Kling AI',
+  },
+  {
+    id: 'kling-v1-pro',
+    name: 'Kling AI Pro Motion',
+    description: 'High definition 1080p AI video camera motion & prompt control.',
+    contextWindow: 0,
+    speed: '~15-40 sec',
+    badge: 'Pro Video',
+    type: 'video',
+    provider: 'Kling AI',
+  },
+  {
+    id: 'pollinations-video',
+    name: 'Pollinations AI Video',
+    description: 'Instant AI dynamic video generation powered by Pollinations & FLUX Motion.',
+    contextWindow: 0,
+    speed: '~5-10 sec',
+    badge: 'Fast Video',
+    type: 'video',
+    provider: 'Pollinations / AI',
+  },
+];
+
+export const SUPPORTED_MODELS: GroqModelInfo[] = [...TEXT_MODELS, ...IMAGE_MODELS, ...VIDEO_MODELS];
 
 export const isImageModel = (modelId: string): boolean => {
-  return IMAGE_MODELS.some((m) => m.id === modelId) || modelId.startsWith('flux') || modelId.includes('dall-e') || modelId.includes('stable-diffusion') || modelId.includes('pollinations');
+  return IMAGE_MODELS.some((m) => m.id === modelId) || (modelId.startsWith('flux') || modelId.includes('dall-e') || modelId.includes('stable-diffusion') || modelId.includes('pollinations')) && !modelId.includes('video');
+};
+
+export const isVideoModel = (modelId: string): boolean => {
+  return VIDEO_MODELS.some((m) => m.id === modelId) || modelId.startsWith('kling') || modelId.includes('video');
 };
 
 export const getModelInfo = (modelId: string): GroqModelInfo => {

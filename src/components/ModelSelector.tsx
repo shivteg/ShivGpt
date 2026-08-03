@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { TEXT_MODELS, IMAGE_MODELS, getModelInfo, isImageModel } from '@/lib/groq';
+import { TEXT_MODELS, IMAGE_MODELS, VIDEO_MODELS, getModelInfo, isImageModel, isVideoModel } from '@/lib/groq';
 import { GroqModelInfo } from '@/lib/types';
-import { ChevronDown, Zap, Sparkles, Check, Image as ImageIcon, MessageSquare } from 'lucide-react';
+import { ChevronDown, Zap, Sparkles, Check, Image as ImageIcon, MessageSquare, Video, Film } from 'lucide-react';
 
 interface ModelSelectorProps {
   selectedModel: string;
@@ -19,6 +19,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
 
   const currentModel = getModelInfo(selectedModel);
   const isImage = isImageModel(selectedModel);
+  const isVideo = isVideoModel(selectedModel);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -41,7 +42,11 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
         }}
         className={`w-full text-left p-2.5 rounded-lg transition-colors flex items-start justify-between gap-2 ${
           isSelected
-            ? 'bg-orange-500/15 border border-orange-500/30 text-white'
+            ? model.type === 'video'
+              ? 'bg-purple-500/15 border border-purple-500/30 text-white'
+              : model.type === 'image'
+              ? 'bg-pink-500/15 border border-pink-500/30 text-white'
+              : 'bg-orange-500/15 border border-orange-500/30 text-white'
             : 'hover:bg-neutral-800/80 text-neutral-300'
         }`}
       >
@@ -50,7 +55,9 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
             <span className="font-semibold text-sm">{model.name}</span>
             {model.badge && (
               <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold ${
-                model.type === 'image' 
+                model.type === 'video'
+                  ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                  : model.type === 'image' 
                   ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30' 
                   : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
               }`}>
@@ -64,7 +71,11 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
             {model.contextWindow > 0 && <span>Context: {Math.round(model.contextWindow / 1024)}k</span>}
           </div>
         </div>
-        {isSelected && <Check className="w-4 h-4 text-orange-400 mt-1 flex-shrink-0" />}
+        {isSelected && (
+          <Check className={`w-4 h-4 mt-1 flex-shrink-0 ${
+            model.type === 'video' ? 'text-purple-400' : model.type === 'image' ? 'text-pink-400' : 'text-orange-400'
+          }`} />
+        )}
       </button>
     );
   };
@@ -74,12 +85,16 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-medium transition-all ${
-          isImage
+          isVideo
+            ? 'bg-gradient-to-r from-purple-950/40 to-indigo-950/40 border-purple-800/50 text-purple-200 hover:border-purple-500'
+            : isImage
             ? 'bg-gradient-to-r from-pink-950/40 to-rose-950/40 border-pink-800/50 text-pink-200 hover:border-pink-500'
             : 'bg-neutral-800/80 hover:bg-neutral-700/80 border-neutral-700 text-neutral-200'
         }`}
       >
-        {isImage ? (
+        {isVideo ? (
+          <Video className="w-4 h-4 text-purple-400" />
+        ) : isImage ? (
           <ImageIcon className="w-4 h-4 text-pink-400" />
         ) : (
           <Zap className="w-4 h-4 text-orange-500 fill-orange-500" />
@@ -87,7 +102,9 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
         <span>{currentModel.name}</span>
         {currentModel.badge && (
           <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold border ${
-            isImage
+            isVideo
+              ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
+              : isImage
               ? 'bg-pink-500/20 text-pink-300 border-pink-500/40'
               : 'bg-orange-500/20 text-orange-400 border-orange-500/30'
           }`}>
@@ -111,6 +128,18 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
             {TEXT_MODELS.map(renderModelButton)}
           </div>
 
+          {/* Video Generation Models (Kling AI) */}
+          <div className="px-3 py-2 border-y border-neutral-800 text-[11px] font-bold text-neutral-400 uppercase tracking-wider flex items-center justify-between mt-2 pt-2">
+            <div className="flex items-center gap-1.5 text-purple-400">
+              <Video className="w-3.5 h-3.5" />
+              <span>Video Generation Models (Kling AI)</span>
+            </div>
+            <Film className="w-3.5 h-3.5 text-purple-400" />
+          </div>
+          <div className="py-1 space-y-1">
+            {VIDEO_MODELS.map(renderModelButton)}
+          </div>
+
           {/* Image Generation Models */}
           <div className="px-3 py-2 border-y border-neutral-800 text-[11px] font-bold text-neutral-400 uppercase tracking-wider flex items-center justify-between mt-2 pt-2">
             <div className="flex items-center gap-1.5 text-pink-400">
@@ -127,4 +156,3 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
     </div>
   );
 };
-

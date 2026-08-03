@@ -14,13 +14,20 @@ export async function POST(req: NextRequest) {
     const cleanPrompt = prompt.trim();
 
     // Check environment variables or client header for API keys
+    const klingApiKey = (
+      process.env.KLING_API_KEY ||
+      process.env.KLINGAI_API_KEY ||
+      process.env.NEXT_PUBLIC_KLING_API_KEY ||
+      ''
+    ).trim();
+
     const togetherApiKey = (
       process.env.TOGETHER_API_KEY ||
       process.env.TOGETHER_AI_API_KEY ||
       process.env.IMAGE_GEN_API_KEY ||
       process.env.NEXT_PUBLIC_IMAGE_GEN_API_KEY ||
       req.headers.get('x-image-api-key') ||
-      ''
+      klingApiKey
     ).trim();
 
     const openAiApiKey = (
@@ -28,11 +35,46 @@ export async function POST(req: NextRequest) {
       (togetherApiKey.startsWith('sk-') ? togetherApiKey : '')
     ).trim();
 
+    const baseUrl = (process.env.KLING_BASE_URL || 'https://api-singapore.klingai.com').replace(/\/$/, '');
+
     let imageUrl = '';
     let providerUsed = 'Pollinations AI';
 
-    // 1. Primary Provider: Together AI (FLUX.1 Schnell / FLUX.1 Dev / SDXL)
-    if (togetherApiKey && !togetherApiKey.startsWith('sk-') && !togetherApiKey.startsWith('hf_')) {
+    // 1. Kling AI Image Generation API
+    if (klingApiKey || (togetherApiKey && (model.includes('kling') || togetherApiKey.length > 20 && !togetherApiKey.startsWith('sk-') && !togetherApiKey.startsWith('hf_')))) {
+      const activeKlingKey = klingApiKey || togetherApiKey;
+      try {
+        const klingRes = await fetch(`${baseUrl}/v1/images/generations`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${activeKlingKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model_name: 'kling-v1',
+            prompt: cleanPrompt,
+            n: 1,
+            aspect_ratio: '1:1',
+          }),
+        });
+
+        if (klingRes.ok) {
+          const data = await meJson(klingRes);
+          if (data.data?.images?.[0]?.url) {
+            imageUrl = data.data.images[0].url;
+            providerUsed = 'Kling AI Image Studio';
+          } else if (data.data?.[0]?.url) {
+            imageUrl = data.data[0].url;
+            providerUsed = 'Kling AI Image Studio';
+          }
+        }
+      } catch (e) {
+        console.warn('Kling AI Image generation exception:', e);
+      }
+    }
+
+    // 2. Together AI (FLUX.1 Schnell / FLUX.1 Dev / SDXL)
+    if (!imageUrl && togetherApiKey && !togetherApiKey.startsWith('sk-') && !togetherApiKey.startsWith('hf_')) {
       try {
         let togetherModel = 'black-forest-labs/FLUX.1-schnell';
         if (model === 'stable-diffusion-xl') {
@@ -76,7 +118,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 2. OpenAI DALL-E Fallback if key starts with sk-
+    // 3. OpenAI DALL-E Fallback if key starts with sk-
     if (!imageUrl && openAiApiKey && openAiApiKey.startsWith('sk-')) {
       try {
         const openAiRes = await fetch('https://api.openai.com/v1/images/generations', {
@@ -105,12 +147,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 3. Fallback: High-resolution Pollinations AI engine
+    // 4. Fallback: High-resolution Pollinations AI engine
     if (!imageUrl) {
       const seed = Math.floor(Math.random() * 1000000);
       const encodedPrompt = encodeURIComponent(cleanPrompt);
       imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&nologo=true&model=flux`;
-      providerUsed = togetherApiKey ? 'Pollinations FLUX' : 'Pollinations FLUX (Free Fallback)';
+      providerUsed = (togetherApiKey || klingApiKey) ? 'Pollinations FLUX' : 'Pollinations FLUX (Free Fallback)';
     }
 
     const endTime = Date.now();
@@ -122,7 +164,7 @@ export async function POST(req: NextRequest) {
       model,
       provider: providerUsed,
       latencyMs,
-      hasTogetherApiKey: Boolean(togetherApiKey),
+      hasApiKey: Boolean(togetherApiKey || klingApiKey),
     });
 
   } catch (err: unknown) {

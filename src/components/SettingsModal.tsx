@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Settings } from '@/lib/types';
-import { X, Key, Sliders, MessageSquareCode, Save, Info, ExternalLink, Image as ImageIcon } from 'lucide-react';
+import { X, Key, Sliders, MessageSquareCode, Save, Info, Image as ImageIcon, Video } from 'lucide-react';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -57,6 +57,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </p>
             <ul className="list-disc list-inside space-y-1 font-mono text-[11px] text-orange-300">
               <li><span className="font-bold">Text API:</span> <code className="bg-black/50 px-1 rounded">GROQ_API_KEY</code></li>
+              <li><span className="font-bold">Video API (Kling AI):</span> <code className="bg-black/50 px-1 rounded">KLING_API_KEY</code> or <code className="bg-black/50 px-1 rounded">VIDEO_GEN_API_KEY</code></li>
               <li><span className="font-bold">Image API:</span> <code className="bg-black/50 px-1 rounded">IMAGE_GEN_API_KEY</code> or <code className="bg-black/50 px-1 rounded">TOGETHER_API_KEY</code> / <code className="bg-black/50 px-1 rounded">OPENAI_API_KEY</code></li>
             </ul>
           </div>
@@ -79,6 +80,24 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </p>
           </div>
 
+          {/* Kling AI Video API Key Override */}
+          <div className="space-y-2">
+            <label className="block font-medium text-neutral-300 flex items-center gap-2">
+              <Video className="w-4 h-4 text-purple-400" />
+              <span>Kling AI Video Generation API Key (Optional Local Override)</span>
+            </label>
+            <input
+              type="password"
+              placeholder="Kling AI API Key (Bearer token)..."
+              value={formData.customVideoApiKey || ''}
+              onChange={(e) => setFormData({ ...formData, customVideoApiKey: e.target.value })}
+              className="w-full px-4 py-2.5 rounded-lg bg-neutral-900 border border-neutral-700 text-neutral-100 focus:outline-none focus:border-purple-500 transition-colors font-mono text-xs"
+            />
+            <p className="text-[11px] text-neutral-500">
+              Overrides server <code className="font-mono">KLING_API_KEY</code> or <code className="font-mono">VIDEO_GEN_API_KEY</code> for video generation.
+            </p>
+          </div>
+
           {/* Image API Key Override */}
           <div className="space-y-2">
             <label className="block font-medium text-neutral-300 flex items-center gap-2">
@@ -87,13 +106,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </label>
             <input
               type="password"
-              placeholder="Together AI / OpenAI / HuggingFace key..."
+              placeholder="Together AI / OpenAI / Kling AI / HuggingFace key..."
               value={formData.customImageApiKey || ''}
               onChange={(e) => setFormData({ ...formData, customImageApiKey: e.target.value })}
               className="w-full px-4 py-2.5 rounded-lg bg-neutral-900 border border-neutral-700 text-neutral-100 focus:outline-none focus:border-pink-500 transition-colors font-mono text-xs"
             />
             <p className="text-[11px] text-neutral-500">
-              Overrides server <code className="font-mono">IMAGE_GEN_API_KEY</code> or <code className="font-mono">TOGETHER_API_KEY</code> / <code className="font-mono">OPENAI_API_KEY</code>.
+              Overrides server <code className="font-mono">IMAGE_GEN_API_KEY</code>, <code className="font-mono">KLING_API_KEY</code>, or <code className="font-mono">TOGETHER_API_KEY</code>.
             </p>
           </div>
 
@@ -172,4 +191,3 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     </div>
   );
 };
-
