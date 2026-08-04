@@ -8,6 +8,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { ChatInterface } from '@/components/ChatInterface';
 import { SettingsModal } from '@/components/SettingsModal';
 import { AuthModal } from '@/components/AuthModal';
+import { Zap } from 'lucide-react';
 
 const DEFAULT_SETTINGS: Settings = {
   systemPrompt: DEFAULT_SYSTEM_PROMPT,
@@ -23,6 +24,7 @@ export default function Home() {
   const [selectedModel, setSelectedModel] = useState<string>('llama-3.3-70b-versatile');
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [authChecking, setAuthChecking] = useState<boolean>(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
@@ -34,6 +36,8 @@ export default function Home() {
       const savedUser = getStoredUser();
       if (savedUser) {
         setUser(savedUser);
+      } else {
+        setIsAuthOpen(true);
       }
 
       const savedSessions = localStorage.getItem('groq_chat_sessions');
@@ -58,6 +62,8 @@ export default function Home() {
     } catch (e) {
       console.error('Failed to load storage:', e);
       createNewSession();
+    } finally {
+      setAuthChecking(false);
     }
   }, []);
 
@@ -103,6 +109,10 @@ export default function Home() {
     };
 
   const handleSendMessage = async (userText: string) => {
+    if (!user) {
+      setIsAuthOpen(true);
+      return;
+    }
     if (!userText.trim()) return;
 
     const userMessage: Message = {
@@ -443,6 +453,19 @@ export default function Home() {
     createNewSession();
   };
 
+  if (authChecking) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-[#171717] text-white">
+        <div className="flex flex-col items-center gap-3 animate-pulse">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white shadow-xl">
+            <Zap className="w-7 h-7 fill-white" />
+          </div>
+          <div className="text-sm font-semibold text-neutral-300">Checking ShivGpt Authentication...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#171717]">
       <Sidebar
@@ -479,10 +502,14 @@ export default function Home() {
       />
 
       <AuthModal
-        isOpen={isAuthOpen}
+        isOpen={!user || isAuthOpen}
         onClose={() => setIsAuthOpen(false)}
         user={user}
-        onAuthSuccess={(authUser) => setUser(authUser)}
+        onAuthSuccess={(authUser) => {
+          setUser(authUser);
+          setIsAuthOpen(false);
+        }}
+        isCompulsory={!user}
       />
     </div>
   );

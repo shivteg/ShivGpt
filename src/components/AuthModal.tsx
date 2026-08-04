@@ -7,9 +7,10 @@ import { X, LogIn, UserPlus, Eye, EyeOff, CheckCircle, AlertTriangle, ShieldChec
 
 interface AuthModalProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose?: () => void;
   user: AuthUser | null;
   onAuthSuccess: (user: AuthUser) => void;
+  isCompulsory?: boolean;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
@@ -17,6 +18,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onClose,
   user,
   onAuthSuccess,
+  isCompulsory = false,
 }) => {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
@@ -59,12 +61,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         const result = await supabaseSignUp(email.trim(), password.trim(), username.trim());
         if (result.error) {
           setError(result.error);
-        } else if (result.requiresEmailVerification) {
-          setSuccessMsg('Account created! Please check your email inbox to verify your account, then click Log In.');
         } else if (result.user) {
-          setSuccessMsg('Account created successfully!');
+          setSuccessMsg('Account created successfully! Redirecting...');
           onAuthSuccess(result.user);
-          setTimeout(() => onClose(), 1200);
+          if (onClose && !isCompulsory) setTimeout(() => onClose(), 1000);
         }
       } else {
         const result = await supabaseSignIn(email.trim(), password.trim());
@@ -73,7 +73,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         } else if (result.user) {
           setSuccessMsg('Welcome back! Successfully logged in.');
           onAuthSuccess(result.user);
-          setTimeout(() => onClose(), 1000);
+          if (onClose && !isCompulsory) setTimeout(() => onClose(), 1000);
         }
       }
     } catch (err: unknown) {
@@ -95,7 +95,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-lg animate-in fade-in duration-200">
       <div className="w-full max-w-md bg-[#1e1e1e] border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-800 bg-[#252525]">
@@ -103,14 +103,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white shadow-md">
               <ShieldCheck className="w-4 h-4" />
             </div>
-            <span>ShivGpt Supabase Auth</span>
+            <span>{isCompulsory ? 'Authentication Required' : 'ShivGpt Supabase Auth'}</span>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {!isCompulsory && onClose && (
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Auth Body */}

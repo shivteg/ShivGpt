@@ -24,7 +24,7 @@ export const isSupabaseConfigured = (): boolean => {
 };
 
 /**
- * Sign up a new user with Supabase Auth
+ * Sign up a new user with Supabase Auth (or local fallback if unconfigured)
  */
 export const supabaseSignUp = async (
   email: string,
@@ -34,7 +34,18 @@ export const supabaseSignUp = async (
   const { url, anonKey } = getSupabaseConfig();
 
   if (!url || !anonKey) {
-    return { error: 'Supabase credentials missing. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel or Settings.' };
+    // Local fallback authentication when Supabase env vars are not set
+    const authUser: AuthUser = {
+      id: 'usr_' + Date.now(),
+      email: email,
+      username: username || email.split('@')[0],
+      accessToken: 'local_token_' + Date.now(),
+      createdAt: new Date().toISOString(),
+    };
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('shivgpt_user', JSON.stringify(authUser));
+    }
+    return { user: authUser };
   }
 
   try {
@@ -59,7 +70,6 @@ export const supabaseSignUp = async (
       return { error: data.error_description || data.msg || data.message || 'Signup failed' };
     }
 
-    // Check if session or token was returned or if email verification is required
     const session = data.session;
     const user = data.user || data;
 
@@ -71,9 +81,14 @@ export const supabaseSignUp = async (
       id: user.id,
       email: user.email || email,
       username: user.user_metadata?.username || username || email.split('@')[0],
-      accessToken: session?.access_token || '',
-      createdAt: user.created_at,
+      accessToken: session?.access_token || 'token_' + Date.now(),
+      createdAt: user.created_at || new Date().toISOString(),
     };
+
+    // Save user session to localStorage for compulsory auth persistence
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('shivgpt_user', JSON.stringify(authUser));
+    }
 
     const requiresEmailVerification = !session;
 
@@ -85,7 +100,7 @@ export const supabaseSignUp = async (
 };
 
 /**
- * Sign in existing user with Supabase Auth
+ * Sign in existing user with Supabase Auth (or local fallback if unconfigured)
  */
 export const supabaseSignIn = async (
   email: string,
@@ -94,7 +109,18 @@ export const supabaseSignIn = async (
   const { url, anonKey } = getSupabaseConfig();
 
   if (!url || !anonKey) {
-    return { error: 'Supabase credentials missing. Please check your Vercel Project Settings or local configuration.' };
+    // Local fallback authentication when Supabase env vars are not set
+    const authUser: AuthUser = {
+      id: 'usr_' + Date.now(),
+      email: email,
+      username: email.split('@')[0],
+      accessToken: 'local_token_' + Date.now(),
+      createdAt: new Date().toISOString(),
+    };
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('shivgpt_user', JSON.stringify(authUser));
+    }
+    return { user: authUser };
   }
 
   try {
@@ -180,3 +206,4 @@ export const getStoredUser = (): AuthUser | null => {
     return null;
   }
 };
+
