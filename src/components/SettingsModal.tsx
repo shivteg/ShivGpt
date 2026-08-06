@@ -46,27 +46,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
         {/* Body */}
         <form onSubmit={handleSave} className="p-6 overflow-y-auto space-y-6 flex-1 text-sm">
-          {/* Vercel Deployment Note */}
-          <div className="p-4 rounded-xl bg-orange-950/20 border border-orange-900/40 text-orange-200 text-xs space-y-2">
-            <div className="flex items-center gap-2 font-semibold text-orange-400 text-sm">
-              <Info className="w-4 h-4" />
-              <span>Environment Variables Notice</span>
-            </div>
-            <p className="leading-relaxed">
-              To activate features via environment variables, set the following in your Vercel Project Settings or <code className="bg-black/40 px-1 py-0.5 rounded text-orange-300 font-mono">.env.local</code>:
-            </p>
-            <ul className="list-disc list-inside space-y-1 font-mono text-[11px] text-orange-300">
-              <li><span className="font-bold">Text API:</span> <code className="bg-black/50 px-1 rounded">GROQ_API_KEY</code></li>
-              <li><span className="font-bold">Video API (Kling AI):</span> <code className="bg-black/50 px-1 rounded">KLING_API_KEY</code> or <code className="bg-black/50 px-1 rounded">VIDEO_GEN_API_KEY</code></li>
-              <li><span className="font-bold">Image API:</span> <code className="bg-black/50 px-1 rounded">IMAGE_GEN_API_KEY</code> or <code className="bg-black/50 px-1 rounded">TOGETHER_API_KEY</code> / <code className="bg-black/50 px-1 rounded">OPENAI_API_KEY</code></li>
-            </ul>
-          </div>
-
-          {/* Groq API Key Override */}
+          {/* Text API Key Override */}
           <div className="space-y-2">
             <label className="block font-medium text-neutral-300 flex items-center gap-2">
               <Key className="w-4 h-4 text-orange-400" />
-              <span>Groq Text API Key (Optional Local Override)</span>
+              <span>ShivGpt API Key (Optional Override)</span>
             </label>
             <input
               type="password"
@@ -76,33 +60,33 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               className="w-full px-4 py-2.5 rounded-lg bg-neutral-900 border border-neutral-700 text-neutral-100 focus:outline-none focus:border-orange-500 transition-colors font-mono text-xs"
             />
             <p className="text-[11px] text-neutral-500">
-              Overrides server <code className="font-mono">GROQ_API_KEY</code> for text generation.
+              Custom key override for text generation.
             </p>
           </div>
 
-          {/* Kling AI Video API Key Override */}
+          {/* Video AI API Key Override */}
           <div className="space-y-2">
             <label className="block font-medium text-neutral-300 flex items-center gap-2">
               <Video className="w-4 h-4 text-purple-400" />
-              <span>Kling AI Video Generation API Key (Optional Local Override)</span>
+              <span>Video AI Key (Optional Override)</span>
             </label>
             <input
               type="password"
-              placeholder="Kling AI API Key (Bearer token)..."
+              placeholder="API Key..."
               value={formData.customVideoApiKey || ''}
               onChange={(e) => setFormData({ ...formData, customVideoApiKey: e.target.value })}
               className="w-full px-4 py-2.5 rounded-lg bg-neutral-900 border border-neutral-700 text-neutral-100 focus:outline-none focus:border-purple-500 transition-colors font-mono text-xs"
             />
             <p className="text-[11px] text-neutral-500">
-              Overrides server <code className="font-mono">KLING_API_KEY</code> or <code className="font-mono">VIDEO_GEN_API_KEY</code> for video generation.
+              Custom key override for video generation.
             </p>
           </div>
 
-          {/* Resend API Key Override */}
+          {/* Email Notification Key Override */}
           <div className="space-y-2">
             <label className="block font-medium text-neutral-300 flex items-center gap-2">
               <Info className="w-4 h-4 text-emerald-400" />
-              <span>Resend API Key for Email Notifications (Optional Local Override)</span>
+              <span>Email Notification Delivery Key (Optional Override)</span>
             </label>
             <input
               type="password"
@@ -112,7 +96,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               className="w-full px-4 py-2.5 rounded-lg bg-neutral-900 border border-neutral-700 text-neutral-100 focus:outline-none focus:border-emerald-500 transition-colors font-mono text-xs"
             />
             <p className="text-[11px] text-neutral-500">
-              Used to deliver actual rate limit emails to your email inbox. Get a free key at <a href="https://resend.com" target="_blank" rel="noopener noreferrer" className="text-emerald-400 underline">resend.com</a>. Overrides server <code className="font-mono">RESEND_API_KEY</code>.
+              Custom key override for high-priority email notification delivery.
             </p>
           </div>
 

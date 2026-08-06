@@ -44,8 +44,8 @@ const TEXT_STARTER_PROMPTS = [
   {
     icon: Lightbulb,
     title: 'Explain Complex Concept',
-    subtitle: 'How does Groq LPU architecture achieve 800 tokens/sec?',
-    prompt: 'Explain Groq LPU architecture and how it achieves record-breaking inference speeds compared to traditional GPUs.',
+    subtitle: 'How does modern LPU hardware achieve 800 tokens/sec?',
+    prompt: 'Explain LPU processing architecture and how it achieves record-breaking inference speeds compared to traditional GPUs.',
   },
   {
     icon: FileCode,
@@ -56,8 +56,8 @@ const TEXT_STARTER_PROMPTS = [
   {
     icon: Bot,
     title: 'System Architecture',
-    subtitle: 'Design scalable microservices on Vercel & Supabase',
-    prompt: 'Design a high-performance system architecture using Vercel Next.js edge routes and Supabase database.',
+    subtitle: 'Design scalable cloud microservices',
+    prompt: 'Design a high-performance system architecture with edge routing and secure cloud database.',
   },
 ];
 

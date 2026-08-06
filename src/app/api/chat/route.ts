@@ -40,10 +40,10 @@ export async function POST(req: NextRequest) {
       req.headers.get('x-groq-api-key');
 
     if (!apiKey || !apiKey.trim()) {
-      // Fallback notice when Groq API key is missing
+      // Fallback notice when API key is unconfigured
       return NextResponse.json({
         role: 'assistant',
-        content: `⚠️ **SAI (Shiv AI) API Key Not Found**\n\nTo start chatting with SAI (Shiv AI), please provide your API Key:\n\n### Option 1: Quick Fix (Works Instantly in Browser)\nClick the **⚙️ Settings** icon in the bottom-left sidebar and paste your key starting with \`gsk_...\` under **Groq API Key**.\n\n### Option 2: Permanent Fix on Vercel\n1. Open your **Vercel Dashboard** -> Project Settings -> **Environment Variables**.\n2. Add Key: \`GROQ_API_KEY\`\n3. Value: Your key from [console.groq.com/keys](https://console.groq.com/keys)\n4. **IMPORTANT:** Go to Vercel **Deployments** tab -> click **\`...\`** -> **Redeploy** (Environment variables take effect after redeploying!).`,
+        content: `⚠️ **ShivGpt (SAI) API Key Required**\n\nTo start chatting with SAI (Shiv AI), please enter your API key in **⚙️ Settings** (bottom-left sidebar).`,
         isFallbackNotice: true,
       });
     }

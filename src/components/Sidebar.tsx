@@ -93,7 +93,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <h1 className="font-bold text-sm text-neutral-100 tracking-tight flex items-center gap-1.5">
                 ShivGpt AI <span className="text-[10px] px-1.5 py-0.2 rounded bg-orange-500/20 text-orange-400 font-bold border border-orange-500/30">PRO</span>
               </h1>
-              <p className="text-[11px] text-neutral-500">Groq LLMs & Supabase Auth</p>
+              <p className="text-[11px] text-neutral-500">Next-Gen SAI Intelligence</p>
             </div>
           </div>
           <button
@@ -104,7 +104,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </button>
         </div>
 
-        {/* User Profile / Supabase Auth Card */}
+        {/* User Profile Card */}
         <div className="p-3 border-b border-neutral-800 bg-[#1f1f1f]/50">
           {user ? (
             <div className="flex items-center justify-between p-2 rounded-xl bg-neutral-900 border border-neutral-800">
@@ -126,7 +126,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <button
                 onClick={onSignOut}
                 className="p-1.5 rounded-lg text-neutral-400 hover:text-red-400 hover:bg-neutral-800 transition-colors"
-                title="Log Out of Supabase"
+                title="Log Out"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -138,7 +138,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             >
               <div className="flex items-center gap-2">
                 <LogIn className="w-4 h-4 text-orange-400 group-hover:scale-110 transition-transform" />
-                <span>Supabase Log In / Sign Up</span>
+                <span>Log In / Create Account</span>
               </div>
               <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 font-bold">
                 Auth
@@ -263,16 +263,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
             <span className="text-[10px] text-neutral-500">API Keys & Models</span>
           </button>
-
-          <a
-            href="https://vercel.com/docs/concepts/projects/environment-variables"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-[11px] text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800/40 transition-colors"
-          >
-            <span>Vercel Env Key Guide</span>
-            <ExternalLink className="w-3 h-3" />
-          </a>
         </div>
       </aside>
     </>

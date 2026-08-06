@@ -3,7 +3,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'SAI (Shiv AI) - Ultra Fast AI Assistant',
-  description: 'ChatGPT-like AI interface powered by SAI (Shiv AI) Llama 3.3 70B & DeepSeek reasoning models. Ready for Vercel deployment.',
+  description: 'Next-generation AI chat, image, and video generation platform powered by SAI (Shiv AI).',
 };
 
 export default function RootLayout({

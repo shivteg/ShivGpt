@@ -131,7 +131,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white shadow-md">
               <ShieldCheck className="w-4 h-4" />
             </div>
-            <span>{isCompulsory ? 'Authentication Required' : 'ShivGpt Supabase Auth'}</span>
+            <span>{isCompulsory ? 'Authentication Required' : 'ShivGpt Account'}</span>
           </div>
           {!isCompulsory && onClose && (
             <button
@@ -145,69 +145,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         {/* Auth Body */}
         <div className="p-6 space-y-5 overflow-y-auto max-h-[80vh]">
-          {/* Supabase Status Banner */}
-          <div className={`p-3.5 rounded-xl border text-xs flex items-start gap-2.5 ${
-            isConfigured 
-              ? 'bg-emerald-950/30 border-emerald-800/40 text-emerald-300' 
-              : 'bg-amber-950/30 border-amber-800/40 text-amber-300'
-          }`}>
-            {isConfigured ? (
-              <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
-            ) : (
-              <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-            )}
-            <div className="space-y-1 flex-1">
-              <div className="font-semibold text-xs">
-                {isConfigured ? '🟢 Connected to Supabase' : '⚠️ Supabase Environment Variables Missing'}
-              </div>
-              <p className="text-[11px] text-neutral-400 leading-relaxed">
-                {isConfigured 
-                  ? 'Your Supabase backend is configured via Vercel / environment variables.' 
-                  : 'Add NEXT_PUBLIC_SUPABASE_URL & NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel Project Settings.'}
-              </p>
-              {!isConfigured && (
-                <button
-                  onClick={() => setShowConfig(!showConfig)}
-                  className="text-amber-400 hover:underline font-semibold text-[11px] pt-1 block"
-                >
-                  {showConfig ? 'Hide manual configuration' : 'Or enter Supabase URL & Anon Key manually →'}
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Manual Config Toggle Form */}
-          {showConfig && (
-            <form onSubmit={handleSaveCustomConfig} className="p-4 rounded-xl bg-neutral-900 border border-neutral-800 space-y-3 text-xs">
-              <div className="font-semibold text-neutral-200">Supabase Browser Override</div>
-              <div>
-                <label className="block text-neutral-400 mb-1">Supabase URL</label>
-                <input
-                  type="text"
-                  placeholder="https://xyz.supabase.co"
-                  value={customUrl}
-                  onChange={(e) => setCustomUrl(e.target.value)}
-                  className="w-full px-3 py-1.5 rounded bg-neutral-950 border border-neutral-800 text-white font-mono text-[11px]"
-                />
-              </div>
-              <div>
-                <label className="block text-neutral-400 mb-1">Supabase Anon Key</label>
-                <input
-                  type="password"
-                  placeholder="eyJh..."
-                  value={customAnonKey}
-                  onChange={(e) => setCustomAnonKey(e.target.value)}
-                  className="w-full px-3 py-1.5 rounded bg-neutral-950 border border-neutral-800 text-white font-mono text-[11px]"
-                />
-              </div>
-              <button
-                type="submit"
-                className="px-3 py-1.5 rounded bg-orange-600 hover:bg-orange-500 text-white font-semibold"
-              >
-                Save Local Config
-              </button>
-            </form>
-          )}
 
           {unverifiedEmail ? (
             /* Email Verification Notice Card */
@@ -399,7 +336,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   ) : (
                     <>
                       <UserPlus className="w-4 h-4" />
-                      <span>Create Supabase Account</span>
+                      <span>Create ShivGpt Account</span>
                     </>
                   )}
                 </button>

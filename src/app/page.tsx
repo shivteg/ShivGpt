@@ -491,7 +491,7 @@ export default function Home() {
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white shadow-xl">
             <Zap className="w-7 h-7 fill-white" />
           </div>
-          <div className="text-sm font-semibold text-neutral-300">Checking ShivGpt Authentication...</div>
+          <div className="text-sm font-semibold text-neutral-300">Initializing ShivGpt...</div>
         </div>
       </div>
     );
