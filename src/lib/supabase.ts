@@ -49,6 +49,8 @@ export const supabaseSignUp = async (
   }
 
   try {
+    const redirectUrl = typeof window !== 'undefined' ? window.location.origin : '';
+
     const res = await fetch(`${url}/auth/v1/signup`, {
       method: 'POST',
       headers: {
@@ -61,6 +63,10 @@ export const supabaseSignUp = async (
         data: {
           username: username || email.split('@')[0],
         },
+        options: {
+          emailRedirectTo: redirectUrl,
+        },
+        redirect_to: redirectUrl,
       }),
     });
 
@@ -77,11 +83,16 @@ export const supabaseSignUp = async (
       return { error: 'Invalid response from Supabase Auth' };
     }
 
+    // Check if email confirmation is required (session is null when email confirmation is active)
+    if (!session || !session.access_token) {
+      return { requiresEmailVerification: true };
+    }
+
     const authUser: AuthUser = {
       id: user.id,
       email: user.email || email,
       username: user.user_metadata?.username || username || email.split('@')[0],
-      accessToken: session?.access_token || 'token_' + Date.now(),
+      accessToken: session.access_token,
       createdAt: user.created_at || new Date().toISOString(),
     };
 
@@ -90,13 +101,115 @@ export const supabaseSignUp = async (
       localStorage.setItem('shivgpt_user', JSON.stringify(authUser));
     }
 
-    const requiresEmailVerification = !session;
-
-    return { user: authUser, requiresEmailVerification };
+    return { user: authUser, requiresEmailVerification: false };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     return { error: msg || 'Network error during signup' };
   }
+};
+
+/**
+ * Resend confirmation email to user
+ */
+export const supabaseResendConfirmation = async (
+  email: string
+): Promise<{ success?: boolean; error?: string }> => {
+  const { url, anonKey } = getSupabaseConfig();
+
+  if (!url || !anonKey) {
+    return { error: 'Supabase is not configured' };
+  }
+
+  const redirectUrl = typeof window !== 'undefined' ? window.location.origin : '';
+
+  try {
+    const res = await fetch(`${url}/auth/v1/resend`, {
+      method: 'POST',
+      headers: {
+        'apikey': anonKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: redirectUrl,
+        },
+        redirect_to: redirectUrl,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      return { error: data.error_description || data.msg || data.message || 'Failed to resend confirmation email' };
+    }
+
+    return { success: true };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { error: msg || 'Network error while requesting email resend' };
+  }
+};
+
+/**
+ * Check and parse Supabase email confirmation redirect URL tokens (#access_token=...)
+ */
+export const supabaseHandleAuthCallback = async (): Promise<{ user?: AuthUser; confirmed?: boolean; error?: string }> => {
+  if (typeof window === 'undefined') return {};
+
+  const hash = window.location.hash || '';
+  const search = window.location.search || '';
+
+  if (!hash && !search) return {};
+
+  const params = new URLSearchParams(
+    hash.startsWith('#') ? hash.substring(1) : search.startsWith('?') ? search.substring(1) : ''
+  );
+  const accessToken = params.get('access_token');
+  const errorDescription = params.get('error_description');
+
+  if (errorDescription) {
+    return { error: decodeURIComponent(errorDescription) };
+  }
+
+  if (!accessToken) {
+    return {};
+  }
+
+  const { url, anonKey } = getSupabaseConfig();
+  if (!url || !anonKey) return {};
+
+  try {
+    const res = await fetch(`${url}/auth/v1/user`, {
+      headers: {
+        'apikey': anonKey,
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
+
+    const user = await res.json();
+    if (res.ok && user && user.id) {
+      const authUser: AuthUser = {
+        id: user.id,
+        email: user.email || '',
+        username: user.user_metadata?.username || user.email?.split('@')[0] || 'User',
+        accessToken: accessToken,
+        createdAt: user.created_at || new Date().toISOString(),
+      };
+
+      localStorage.setItem('shivgpt_user', JSON.stringify(authUser));
+
+      // Remove access_token fragment from window URL
+      window.history.replaceState(null, '', window.location.pathname);
+
+      return { user: authUser, confirmed: true };
+    }
+  } catch (err) {
+    console.error('Failed to process confirmation callback:', err);
+  }
+
+  return {};
 };
 
 /**
@@ -206,4 +319,5 @@ export const getStoredUser = (): AuthUser | null => {
     return null;
   }
 };
+
 

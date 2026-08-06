@@ -3,12 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { ChatSession, Message, Settings, AuthUser } from '@/lib/types';
 import { DEFAULT_SYSTEM_PROMPT, isImageModel, isVideoModel } from '@/lib/groq';
-import { getStoredUser, supabaseSignOut } from '@/lib/supabase';
+import { getStoredUser, supabaseSignOut, supabaseHandleAuthCallback } from '@/lib/supabase';
 import { Sidebar } from '@/components/Sidebar';
 import { ChatInterface } from '@/components/ChatInterface';
 import { SettingsModal } from '@/components/SettingsModal';
 import { AuthModal } from '@/components/AuthModal';
-import { Zap } from 'lucide-react';
+import { Zap, CheckCircle } from 'lucide-react';
 
 const DEFAULT_SETTINGS: Settings = {
   systemPrompt: DEFAULT_SYSTEM_PROMPT,
@@ -29,42 +29,56 @@ export default function Home() {
   const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [authNotification, setAuthNotification] = useState<string | null>(null);
 
-  // Initialize from LocalStorage and Supabase session
+  // Initialize from LocalStorage and handle Supabase email confirmation callbacks
   useEffect(() => {
-    try {
-      const savedUser = getStoredUser();
-      if (savedUser) {
-        setUser(savedUser);
-      } else {
-        setIsAuthOpen(true);
-      }
-
-      const savedSessions = localStorage.getItem('groq_chat_sessions');
-      const savedSettings = localStorage.getItem('groq_chat_settings');
-
-      if (savedSettings) {
-        setSettings(JSON.parse(savedSettings));
-      }
-
-      if (savedSessions) {
-        const parsed: ChatSession[] = JSON.parse(savedSessions);
-        if (parsed.length > 0) {
-          setSessions(parsed);
-          setActiveSessionId(parsed[0].id);
-          setSelectedModel(parsed[0].model || 'llama-3.3-70b-versatile');
-          return;
+    const initAuth = async () => {
+      try {
+        // First check if user arrived from email confirmation link redirect (#access_token=...)
+        const callbackResult = await supabaseHandleAuthCallback();
+        if (callbackResult.user) {
+          setUser(callbackResult.user);
+          setIsAuthOpen(false);
+          setAuthNotification('Email verified successfully! Welcome to ShivGpt.');
+          setTimeout(() => setAuthNotification(null), 5000);
+        } else {
+          const savedUser = getStoredUser();
+          if (savedUser) {
+            setUser(savedUser);
+          } else {
+            setIsAuthOpen(true);
+          }
         }
-      }
 
-      // Create initial new chat session if none exists
-      createNewSession();
-    } catch (e) {
-      console.error('Failed to load storage:', e);
-      createNewSession();
-    } finally {
-      setAuthChecking(false);
-    }
+        const savedSessions = localStorage.getItem('groq_chat_sessions');
+        const savedSettings = localStorage.getItem('groq_chat_settings');
+
+        if (savedSettings) {
+          setSettings(JSON.parse(savedSettings));
+        }
+
+        if (savedSessions) {
+          const parsed: ChatSession[] = JSON.parse(savedSessions);
+          if (parsed.length > 0) {
+            setSessions(parsed);
+            setActiveSessionId(parsed[0].id);
+            setSelectedModel(parsed[0].model || 'llama-3.3-70b-versatile');
+            return;
+          }
+        }
+
+        // Create initial new chat session if none exists
+        createNewSession();
+      } catch (e) {
+        console.error('Failed to load storage:', e);
+        createNewSession();
+      } finally {
+        setAuthChecking(false);
+      }
+    };
+
+    initAuth();
   }, []);
 
   // Save sessions to LocalStorage on change
@@ -467,7 +481,14 @@ export default function Home() {
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#171717]">
+    <div className="relative flex h-screen w-screen overflow-hidden bg-[#171717]">
+      {authNotification && (
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-emerald-950/90 border border-emerald-500/60 text-emerald-200 text-xs font-semibold shadow-2xl backdrop-blur-md animate-in slide-in-from-top-3 duration-300">
+          <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+          <span>{authNotification}</span>
+        </div>
+      )}
+
       <Sidebar
         sessions={sessions}
         activeSessionId={activeSessionId}
