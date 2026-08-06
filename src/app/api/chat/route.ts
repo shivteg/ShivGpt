@@ -1,10 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { checkUserRateLimit, consumeUserTokens } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, model, temperature, maxTokens, systemPrompt } = await req.json();
+    const body = await req.json();
+    const { messages, model, temperature, maxTokens, systemPrompt, userEmail: bodyEmail } = body;
+
+    // Identify user by email from headers or body
+    const userEmail = (
+      req.headers.get('x-user-email') ||
+      bodyEmail ||
+      'anonymous@shivgpt.com'
+    ).trim();
+
+    // Enforce 432 tokens / 1 hour rate limit per user
+    const limitStatus = checkUserRateLimit(userEmail);
+
+    if (!limitStatus.allowed) {
+      return NextResponse.json(
+        {
+          error: `⚠️ Rate limit exceeded! You have reached your limit of 432 tokens / 1 hour. An email notification has been sent to your registered email (${userEmail}). You must try again after 1 hour. Direct link: shiv-gpt-two.vercel.app`,
+          rateLimitExceeded: true,
+          usedTokens: limitStatus.usedTokens,
+          limit: limitStatus.limit,
+          remainingTokens: limitStatus.remainingTokens,
+          resetInMinutes: limitStatus.resetInMinutes,
+          targetUrl: 'https://shiv-gpt-two.vercel.app',
+        },
+        { status: 429 }
+      );
+    }
 
     // Check for API key from server environment variables or client header override
     const apiKey =
@@ -63,6 +90,9 @@ export async function POST(req: NextRequest) {
     const completionTokens = usage.completion_tokens || 0;
     const tokensPerSecond = completionTokens > 0 ? Math.round((completionTokens / (latencyMs / 1000))) : 0;
 
+    // Record consumption and trigger email alerts if limit (432 tokens/1 hr) is breached
+    const updatedQuota = await consumeUserTokens(userEmail, totalTokens);
+
     return NextResponse.json({
       role: 'assistant',
       content: assistantContent,
@@ -73,6 +103,12 @@ export async function POST(req: NextRequest) {
         totalTokens: totalTokens,
         latencyMs: latencyMs,
         tokensPerSecond: tokensPerSecond,
+        userQuota: {
+          usedInWindow: updatedQuota.usedTokens,
+          remaining: updatedQuota.remainingTokens,
+          limit: updatedQuota.limit,
+          isExceeded: updatedQuota.isExceeded,
+        },
       },
     });
 

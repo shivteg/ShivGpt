@@ -175,6 +175,10 @@ export default function Home() {
           'Content-Type': 'application/json',
         };
 
+        if (user?.email) {
+          headers['x-user-email'] = user.email;
+        }
+
         if (settings.customVideoApiKey || settings.customImageApiKey) {
           headers['x-video-api-key'] = settings.customVideoApiKey || settings.customImageApiKey || '';
         }
@@ -267,6 +271,10 @@ export default function Home() {
           'Content-Type': 'application/json',
         };
 
+        if (user?.email) {
+          headers['x-user-email'] = user.email;
+        }
+
         if (settings.customImageApiKey) {
           headers['x-image-api-key'] = settings.customImageApiKey;
         }
@@ -352,6 +360,10 @@ export default function Home() {
         headers['x-groq-api-key'] = settings.customApiKey;
       }
 
+      if (user?.email) {
+        headers['x-user-email'] = user.email;
+      }
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers,
@@ -364,6 +376,7 @@ export default function Home() {
           temperature: settings.temperature,
           maxTokens: settings.maxTokens,
           systemPrompt: settings.systemPrompt,
+          userEmail: user?.email,
         }),
       });
 

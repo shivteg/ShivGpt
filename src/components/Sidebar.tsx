@@ -118,6 +118,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <ShieldCheck className="w-3 h-3 text-emerald-400" />
                   </div>
                   <div className="text-[10px] text-neutral-500 truncate">{user.email}</div>
+                  <div className="text-[9px] text-amber-400/90 font-medium flex items-center gap-1 mt-0.5">
+                    <span>⚡ Quota: 432 tokens/1 hr</span>
+                  </div>
                 </div>
               </div>
               <button
