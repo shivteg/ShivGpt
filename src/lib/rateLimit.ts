@@ -11,8 +11,39 @@ interface UserQuotaRecord {
   resetTimer?: NodeJS.Timeout;
 }
 
-// In-memory store for user token usage records
+interface PendingEmailJob {
+  userEmail: string;
+  resetAt: number;
+  sent: boolean;
+  createdAt: number;
+}
+
+// In-memory stores for user token usage records and pending reset email jobs
 const userQuotaStore = new Map<string, UserQuotaRecord>();
+const pendingEmailJobs: PendingEmailJob[] = [];
+
+/**
+ * Process any pending reset email jobs whose 1-hour wait period has elapsed
+ */
+export const processPendingResetEmails = async (): Promise<{ processedCount: number }> => {
+  const now = Date.now();
+  let processedCount = 0;
+
+  for (const job of pendingEmailJobs) {
+    if (!job.sent && now >= job.resetAt) {
+      job.sent = true;
+      processedCount++;
+      console.log(`[RateLimit Cron] 1-hour wait completed for ${job.userEmail}. Dispatching reset email.`);
+      try {
+        await sendRateLimitResetEmail(job.userEmail);
+      } catch (err) {
+        console.error(`[RateLimit Cron] Error sending reset email to ${job.userEmail}:`, err);
+      }
+    }
+  }
+
+  return { processedCount };
+};
 
 /**
  * Clean up expired user records or reset windows
@@ -53,6 +84,9 @@ export const checkUserRateLimit = (
   resetAt: number;
   resetInMinutes: number;
 } => {
+  // Always check for completed pending email jobs
+  processPendingResetEmails().catch(() => {});
+
   const normalizedEmail = userEmail.toLowerCase().trim();
   const record = getOrResetUserRecord(normalizedEmail);
   const now = Date.now();
@@ -93,24 +127,30 @@ export const consumeUserTokens = async (
     record.exceededNotified = true;
 
     // 1. Send immediate email: "Rate limit exceeded you must try again after 1 hr"
-    console.log(`[RateLimit] User ${normalizedEmail} exceeded limit (${record.usedTokens}/${HOURLY_TOKEN_LIMIT} tokens). Sending warning email.`);
+    console.log(`[RateLimit] User ${normalizedEmail} exceeded limit (${record.usedTokens}/${HOURLY_TOKEN_LIMIT} tokens). Sending warning email immediately.`);
     sendRateLimitExceededEmail(normalizedEmail).catch((err) =>
       console.error(`[RateLimit] Failed to send rate limit exceeded email to ${normalizedEmail}:`, err)
     );
 
-    // 2. Schedule email after 1 hour (when wait is finished): "Finally wait is over now use SAI link- shiv-gpt-two.vercel.app"
-    const timeUntilResetMs = Math.max(1000, record.resetAt - now);
-    console.log(`[RateLimit] Scheduling reset email for ${normalizedEmail} in ${Math.round(timeUntilResetMs / 1000)}s.`);
+    // 2. Queue persistent reset email job for when the 1-hour wait period expires
+    const resetTime = record.resetAt;
+    pendingEmailJobs.push({
+      userEmail: normalizedEmail,
+      resetAt: resetTime,
+      sent: false,
+      createdAt: now,
+    });
+
+    const timeUntilResetMs = Math.max(1000, resetTime - now);
+    console.log(`[RateLimit] Scheduled reset email for ${normalizedEmail} at ${new Date(resetTime).toISOString()} (in ${Math.round(timeUntilResetMs / 1000)}s).`);
 
     if (record.resetTimer) {
       clearTimeout(record.resetTimer);
     }
 
     record.resetTimer = setTimeout(() => {
-      console.log(`[RateLimit] 1-hour wait period complete for ${normalizedEmail}. Sending reset email.`);
-      sendRateLimitResetEmail(normalizedEmail).catch((err) =>
-        console.error(`[RateLimit] Failed to send rate limit reset email to ${normalizedEmail}:`, err)
-      );
+      console.log(`[RateLimit Timer] 1-hour wait period finished for ${normalizedEmail}. Executing reset email.`);
+      processPendingResetEmails().catch(() => {});
     }, timeUntilResetMs);
   }
 
@@ -120,4 +160,26 @@ export const consumeUserTokens = async (
     limit: HOURLY_TOKEN_LIMIT,
     isExceeded: record.usedTokens >= HOURLY_TOKEN_LIMIT,
   };
+};
+
+/**
+ * Manually trigger or simulate rate limit email events for a specific user (for testing)
+ */
+export const triggerTestEmailFlow = async (
+  userEmail: string,
+  type: 'exceeded' | 'reset' | 'both' = 'both'
+): Promise<{ exceededSent: boolean; resetSent: boolean }> => {
+  const normalizedEmail = userEmail.toLowerCase().trim();
+  let exceededSent = false;
+  let resetSent = false;
+
+  if (type === 'exceeded' || type === 'both') {
+    exceededSent = await sendRateLimitExceededEmail(normalizedEmail);
+  }
+
+  if (type === 'reset' || type === 'both') {
+    resetSent = await sendRateLimitResetEmail(normalizedEmail);
+  }
+
+  return { exceededSent, resetSent };
 };
