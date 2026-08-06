@@ -398,7 +398,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           </form>
 
           <p className="text-[11px] text-center text-neutral-500">
-            ShivGpt AI Studio • Powered by Groq, Kling AI, FLUX & OpenAI • Set API key in env vars for full features
+            ShivGpt AI Studio • Powered by shivteg
           </p>
         </div>
       </div>

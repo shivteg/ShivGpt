@@ -93,7 +93,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <h1 className="font-bold text-sm text-neutral-100 tracking-tight flex items-center gap-1.5">
                 ShivGpt AI <span className="text-[10px] px-1.5 py-0.2 rounded bg-orange-500/20 text-orange-400 font-bold border border-orange-500/30">PRO</span>
               </h1>
-              <p className="text-[11px] text-neutral-500">Next-Gen SAI Intelligence</p>
+              <p className="text-[11px] text-neutral-500">shivteg</p>
             </div>
           </div>
           <button
