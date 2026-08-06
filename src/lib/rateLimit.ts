@@ -16,6 +16,7 @@ interface PendingEmailJob {
   resetAt: number;
   sent: boolean;
   createdAt: number;
+  resendApiKey?: string;
 }
 
 // In-memory stores for user token usage records and pending reset email jobs
@@ -35,7 +36,7 @@ export const processPendingResetEmails = async (): Promise<{ processedCount: num
       processedCount++;
       console.log(`[RateLimit Cron] 1-hour wait completed for ${job.userEmail}. Dispatching reset email.`);
       try {
-        await sendRateLimitResetEmail(job.userEmail);
+        await sendRateLimitResetEmail(job.userEmail, job.resendApiKey);
       } catch (err) {
         console.error(`[RateLimit Cron] Error sending reset email to ${job.userEmail}:`, err);
       }
@@ -110,7 +111,8 @@ export const checkUserRateLimit = (
  */
 export const consumeUserTokens = async (
   userEmail: string,
-  tokensConsumed: number
+  tokensConsumed: number,
+  resendApiKeyOverride?: string
 ): Promise<{
   usedTokens: number;
   remainingTokens: number;
@@ -128,7 +130,7 @@ export const consumeUserTokens = async (
 
     // 1. Send immediate email: "Rate limit exceeded you must try again after 1 hr"
     console.log(`[RateLimit] User ${normalizedEmail} exceeded limit (${record.usedTokens}/${HOURLY_TOKEN_LIMIT} tokens). Sending warning email immediately.`);
-    sendRateLimitExceededEmail(normalizedEmail).catch((err) =>
+    sendRateLimitExceededEmail(normalizedEmail, resendApiKeyOverride).catch((err) =>
       console.error(`[RateLimit] Failed to send rate limit exceeded email to ${normalizedEmail}:`, err)
     );
 
@@ -139,6 +141,7 @@ export const consumeUserTokens = async (
       resetAt: resetTime,
       sent: false,
       createdAt: now,
+      resendApiKey: resendApiKeyOverride,
     });
 
     const timeUntilResetMs = Math.max(1000, resetTime - now);

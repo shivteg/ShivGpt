@@ -90,8 +90,10 @@ export async function POST(req: NextRequest) {
     const completionTokens = usage.completion_tokens || 0;
     const tokensPerSecond = completionTokens > 0 ? Math.round((completionTokens / (latencyMs / 1000))) : 0;
 
+    const resendApiKeyOverride = req.headers.get('x-resend-api-key') || undefined;
+
     // Record consumption and trigger email alerts if limit (432 tokens/1 hr) is breached
-    const updatedQuota = await consumeUserTokens(userEmail, totalTokens);
+    const updatedQuota = await consumeUserTokens(userEmail, totalTokens, resendApiKeyOverride);
 
     return NextResponse.json({
       role: 'assistant',

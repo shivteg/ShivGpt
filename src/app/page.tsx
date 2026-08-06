@@ -360,6 +360,10 @@ export default function Home() {
         headers['x-groq-api-key'] = settings.customApiKey;
       }
 
+      if (settings.resendApiKey) {
+        headers['x-resend-api-key'] = settings.resendApiKey;
+      }
+
       if (user?.email) {
         headers['x-user-email'] = user.email;
       }

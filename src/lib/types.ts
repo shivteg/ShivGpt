@@ -44,6 +44,7 @@ export interface Settings {
   customApiKey?: string;
   customImageApiKey?: string;
   customVideoApiKey?: string;
+  resendApiKey?: string;
   systemPrompt: string;
   temperature: number;
   maxTokens: number;

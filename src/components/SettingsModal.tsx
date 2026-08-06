@@ -98,21 +98,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </p>
           </div>
 
-          {/* Image API Key Override */}
+          {/* Resend API Key Override */}
           <div className="space-y-2">
             <label className="block font-medium text-neutral-300 flex items-center gap-2">
-              <ImageIcon className="w-4 h-4 text-pink-400" />
-              <span>Image Generation API Key (Optional Local Override)</span>
+              <Info className="w-4 h-4 text-emerald-400" />
+              <span>Resend API Key for Email Notifications (Optional Local Override)</span>
             </label>
             <input
               type="password"
-              placeholder="Together AI / OpenAI / Kling AI / HuggingFace key..."
-              value={formData.customImageApiKey || ''}
-              onChange={(e) => setFormData({ ...formData, customImageApiKey: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-lg bg-neutral-900 border border-neutral-700 text-neutral-100 focus:outline-none focus:border-pink-500 transition-colors font-mono text-xs"
+              placeholder="re_..."
+              value={formData.resendApiKey || ''}
+              onChange={(e) => setFormData({ ...formData, resendApiKey: e.target.value })}
+              className="w-full px-4 py-2.5 rounded-lg bg-neutral-900 border border-neutral-700 text-neutral-100 focus:outline-none focus:border-emerald-500 transition-colors font-mono text-xs"
             />
             <p className="text-[11px] text-neutral-500">
-              Overrides server <code className="font-mono">IMAGE_GEN_API_KEY</code>, <code className="font-mono">KLING_API_KEY</code>, or <code className="font-mono">TOGETHER_API_KEY</code>.
+              Used to deliver actual rate limit emails to your email inbox. Get a free key at <a href="https://resend.com" target="_blank" rel="noopener noreferrer" className="text-emerald-400 underline">resend.com</a>. Overrides server <code className="font-mono">RESEND_API_KEY</code>.
             </p>
           </div>
 
