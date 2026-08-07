@@ -118,7 +118,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       if (customUrl.trim()) localStorage.setItem('shivgpt_supabase_url', customUrl.trim());
       if (customAnonKey.trim()) localStorage.setItem('shivgpt_supabase_anon_key', customAnonKey.trim());
     }
-    setSuccessMsg('Saved Supabase configuration override!');
+    setSuccessMsg('Saved configuration override!');
     setShowConfig(false);
   };
 

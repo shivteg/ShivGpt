@@ -80,7 +80,7 @@ export const supabaseSignUp = async (
     const user = data.user || data;
 
     if (!user || !user.id) {
-      return { error: 'Invalid response from Supabase Auth' };
+      return { error: 'Invalid response from authentication server' };
     }
 
     // Check if email confirmation is required (session is null when email confirmation is active)
@@ -117,7 +117,7 @@ export const supabaseResendConfirmation = async (
   const { url, anonKey } = getSupabaseConfig();
 
   if (!url || !anonKey) {
-    return { error: 'Supabase is not configured' };
+    return { error: 'Authentication service unavailable' };
   }
 
   const redirectUrl = typeof window !== 'undefined' ? window.location.origin : '';
