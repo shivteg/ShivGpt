@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { messages, model, temperature, maxTokens, systemPrompt, userEmail: bodyEmail } = body;
+    const { messages, model, temperature, maxTokens, systemPrompt, trainedImages, userEmail: bodyEmail } = body;
 
     // Identify user by email from headers or body
     const userEmail = (
@@ -48,11 +48,50 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const formattedMessages: Array<{ role: string; content: string }> = [];
-    if (systemPrompt) {
-      formattedMessages.push({ role: 'system', content: systemPrompt });
+    let finalSystemPrompt = systemPrompt || '';
+    if (trainedImages && Array.isArray(trainedImages) && trainedImages.length > 0) {
+      const trainedContextString = trainedImages
+        .map(
+          (img: { title?: string; context: string; imageUrl?: string }, i: number) =>
+            `Picture #${i + 1} (${img.title || 'Untitled'}):\n- Context/Training Instructions: ${img.context}\n- Image URL/Data: ${img.imageUrl ? img.imageUrl.substring(0, 150) + '...' : 'Uploaded Image'}`
+        )
+        .join('\n\n');
+
+      const memoryBlock = `\n\n[TRAINED PICTURE CONTEXT & KNOWLEDGE BASE]:\nThe user has explicitly trained you with the following picture contexts and instructions. Always utilize this background knowledge to understand user queries about these pictures:\n${trainedContextString}\n`;
+      finalSystemPrompt = finalSystemPrompt ? `${finalSystemPrompt}\n${memoryBlock}` : memoryBlock;
     }
-    formattedMessages.push(...messages);
+
+    const formattedMessages: Array<{ role: string; content: any }> = [];
+    if (finalSystemPrompt) {
+      formattedMessages.push({ role: 'system', content: finalSystemPrompt });
+    }
+
+    // Process chat messages and attach image multimodal payload if present
+    for (const msg of messages) {
+      if (msg.attachedImage && msg.attachedImage.url) {
+        if (model && model.includes('vision')) {
+          formattedMessages.push({
+            role: msg.role,
+            content: [
+              { type: 'text', text: msg.content || 'Please analyze this picture and context.' },
+              { type: 'image_url', image_url: { url: msg.attachedImage.url } },
+            ],
+          });
+        } else {
+          // Standard text model fallback
+          const textWithImageContext = `${msg.content || ''}\n\n[Attached Picture: ${msg.attachedImage.title || 'User Picture'}]\nContext: ${msg.attachedImage.context || 'User provided image'}\nImage URL: ${msg.attachedImage.url}`;
+          formattedMessages.push({
+            role: msg.role,
+            content: textWithImageContext.trim(),
+          });
+        }
+      } else {
+        formattedMessages.push({
+          role: msg.role,
+          content: msg.content,
+        });
+      }
+    }
 
     const startTime = Date.now();
 

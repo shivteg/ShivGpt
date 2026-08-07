@@ -236,8 +236,32 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
               </div>
             </div>
           ) : (
-            /* Regular Text / Code Content */
+            /* Regular Text / Code Content & Attached Picture */
             <div className="text-neutral-200 text-sm leading-relaxed space-y-3">
+              {message.attachedImage && message.attachedImage.url && (
+                <div className="mb-3 p-3 rounded-xl bg-neutral-900 border border-neutral-800 max-w-md space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-orange-400">
+                    <ImageIcon className="w-4 h-4 text-orange-400" />
+                    <span>Attached Picture Context: {message.attachedImage.title || 'User Image'}</span>
+                  </div>
+                  <img
+                    src={message.attachedImage.url}
+                    alt={message.attachedImage.title || 'Attached Picture'}
+                    className="max-h-56 w-auto object-cover rounded-lg border border-neutral-700 cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => {
+                      if (message.attachedImage?.url) {
+                        window.open(message.attachedImage.url, '_blank');
+                      }
+                    }}
+                  />
+                  {message.attachedImage.context && (
+                    <p className="text-xs text-neutral-400 italic bg-neutral-950/60 p-2 rounded-lg border border-neutral-800">
+                      Context instruction: "{message.attachedImage.context}"
+                    </p>
+                  )}
+                </div>
+              )}
+
               {parts.map((part, idx) => {
                 if (part.type === 'code') {
                   return <CodeBlock key={idx} language={part.language} code={part.content} />;

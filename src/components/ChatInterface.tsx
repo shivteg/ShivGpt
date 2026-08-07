@@ -22,19 +22,31 @@ import {
   Video,
   Film,
   Play,
+  Brain,
+  Paperclip,
+  X,
+  Upload,
 } from 'lucide-react';
 
 interface ChatInterfaceProps {
   session: ChatSession;
   selectedModel: string;
   onSelectModel: (modelId: string) => void;
-  onSendMessage: (content: string) => void;
+  onSendMessage: (content: string, attachedImage?: { url: string; title?: string; context?: string }) => void;
   onRegenerate: () => void;
   isLoading: boolean;
   onToggleSidebar: () => void;
+  onOpenTrainModal: () => void;
 }
 
 const TEXT_STARTER_PROMPTS = [
+  {
+    icon: Brain,
+    title: 'Train AI with Picture Context',
+    subtitle: 'Upload a picture & teach SAI custom context, pets, UI design or charts',
+    prompt: '',
+    isTrainAction: true,
+  },
   {
     icon: Code,
     title: 'Write Python Code',
@@ -52,12 +64,6 @@ const TEXT_STARTER_PROMPTS = [
     title: 'Debug React / Next.js',
     subtitle: 'Fix state re-render issue in Next.js App Router',
     prompt: 'How do I optimize React component state in Next.js App Router to avoid unnecessary re-renders?',
-  },
-  {
-    icon: Bot,
-    title: 'System Architecture',
-    subtitle: 'Design scalable cloud microservices',
-    prompt: 'Design a high-performance system architecture with edge routing and secure cloud database.',
   },
 ];
 
@@ -123,11 +129,15 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   onRegenerate,
   isLoading,
   onToggleSidebar,
+  onOpenTrainModal,
 }) => {
   const [input, setInput] = useState('');
+  const [attachedImage, setAttachedImage] = useState<{ url: string; title?: string; context?: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const trainedImages = session.trainedImages || [];
   const isVideoMode = isVideoModel(selectedModel);
   const isImageMode = isImageModel(selectedModel);
   
@@ -145,11 +155,30 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     scrollToBottom();
   }, [session.messages, isLoading]);
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAttachedImage({
+          url: reader.result as string,
+          title: file.name.replace(/\.[^/.]+$/, ''),
+          context: 'User attached picture to this query',
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!input.trim() || isLoading) return;
-    onSendMessage(input.trim());
+    if ((!input.trim() && !attachedImage) || isLoading) return;
+    
+    const messageText = input.trim() || (attachedImage ? `Analyze this picture: ${attachedImage.title || ''}` : '');
+    onSendMessage(messageText, attachedImage || undefined);
+    
     setInput('');
+    setAttachedImage(null);
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
@@ -195,6 +224,21 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Train AI with Picture Button */}
+          <button
+            onClick={onOpenTrainModal}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-orange-600 via-amber-600 to-purple-600 text-white text-xs font-semibold shadow-lg shadow-orange-950/40 hover:opacity-95 transition-all"
+            title="Train AI with Picture & Context"
+          >
+            <Brain className="w-3.5 h-3.5 text-white" />
+            <span className="hidden sm:inline">Train AI Picture</span>
+            {trainedImages.length > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full bg-white/20 text-white text-[10px] font-bold">
+                {trainedImages.length}
+              </span>
+            )}
+          </button>
+
           {/* Quick Mode Toggle Button */}
           <button
             onClick={cycleMode}
@@ -209,17 +253,17 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             {isVideoMode ? (
               <>
                 <Video className="w-3.5 h-3.5 text-purple-400" />
-                <span>🎥 Kling AI Video Active</span>
+                <span>🎥 Kling AI Video</span>
               </>
             ) : isImageMode ? (
               <>
                 <ImageIcon className="w-3.5 h-3.5 text-pink-400" />
-                <span>🎨 Image Mode Active</span>
+                <span>🎨 Image Mode</span>
               </>
             ) : (
               <>
                 <Zap className="w-3.5 h-3.5 fill-orange-400" />
-                <span>🎥 Switch to AI Video / Image</span>
+                <span>🎥 AI Studio</span>
               </>
             )}
           </button>
@@ -243,7 +287,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               ) : isImageMode ? (
                 <Palette className="w-9 h-9 text-white" />
               ) : (
-                <Zap className="w-9 h-9 fill-white" />
+                <Brain className="w-9 h-9 text-white" />
               )}
             </div>
 
@@ -252,15 +296,44 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 ? 'What AI Video would you like to generate with Kling AI?'
                 : isImageMode
                 ? 'What image do you want to create?'
-                : 'What would you like to build today?'}
+                : 'What would you like to build or train today?'}
             </h2>
-            <p className="text-neutral-400 text-sm max-w-md mb-10 leading-relaxed">
+            <p className="text-neutral-400 text-sm max-w-md mb-8 leading-relaxed">
               {isVideoMode
                 ? 'Describe your cinematic video scene in detail. Powered by Kling AI & high-speed video rendering.'
                 : isImageMode
                 ? 'Describe your visual idea in detail. Powered by FLUX, Kling AI, DALL-E 3 & SDXL.'
-                : "Powered by SAI (Shiv AI)'s lightning-fast open models. Select a suggestion below or type your prompt."}
+                : "Powered by SAI (Shiv AI)'s vision models & open reasoning. Upload pictures to train AI or select a prompt."}
             </p>
+
+            {/* Active Trained Pictures Bar */}
+            {trainedImages.length > 0 && (
+              <div className="mb-8 w-full max-w-lg p-3 rounded-2xl bg-neutral-900/90 border border-neutral-800 text-left">
+                <div className="flex items-center justify-between text-xs font-semibold text-orange-400 mb-2">
+                  <span className="flex items-center gap-1.5">
+                    <Brain className="w-4 h-4 text-orange-400" />
+                    <span>Trained Picture Memory ({trainedImages.length})</span>
+                  </span>
+                  <button
+                    onClick={onOpenTrainModal}
+                    className="text-[11px] text-neutral-400 hover:text-white underline"
+                  >
+                    Manage
+                  </button>
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {trainedImages.map((img) => (
+                    <div
+                      key={img.id}
+                      className="flex items-center gap-2 p-1.5 rounded-lg bg-neutral-950 border border-neutral-800 flex-shrink-0"
+                    >
+                      <img src={img.imageUrl} alt={img.title} className="w-7 h-7 object-cover rounded" />
+                      <span className="text-xs text-neutral-300 font-medium max-w-[120px] truncate">{img.title}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
               {activeStarters.map((starter, idx) => {
@@ -268,12 +341,20 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 return (
                   <button
                     key={idx}
-                    onClick={() => onSendMessage(starter.prompt)}
+                    onClick={() => {
+                      if (starter.isTrainAction) {
+                        onOpenTrainModal();
+                      } else {
+                        onSendMessage(starter.prompt);
+                      }
+                    }}
                     className={`p-4 rounded-xl bg-neutral-900/80 hover:bg-neutral-800/90 border text-left transition-all group flex flex-col justify-between hover:scale-[1.01] ${
                       isVideoMode
                         ? 'border-neutral-800 hover:border-purple-500/50'
                         : isImageMode
                         ? 'border-neutral-800 hover:border-pink-500/50'
+                        : starter.isTrainAction
+                        ? 'border-orange-900/60 bg-gradient-to-br from-orange-950/30 to-purple-950/30 hover:border-orange-500'
                         : 'border-neutral-800 hover:border-orange-500/50'
                     }`}
                   >
@@ -290,8 +371,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       }`} />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-sm text-neutral-200 group-hover:text-white">
+                      <h3 className="font-semibold text-sm text-neutral-200 group-hover:text-white flex items-center gap-1.5">
                         {starter.title}
+                        {starter.isTrainAction && (
+                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-orange-500 text-black font-bold">
+                            NEW
+                          </span>
+                        )}
                       </h3>
                       <p className="text-xs text-neutral-500 group-hover:text-neutral-400 mt-0.5 line-clamp-2">
                         {starter.subtitle}
@@ -324,7 +410,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   ) : isImageMode ? (
                     <Palette className="w-4 h-4 animate-spin text-white" />
                   ) : (
-                    <Zap className="w-4 h-4 fill-white animate-spin" />
+                    <Brain className="w-4 h-4 text-white animate-spin" />
                   )}
                 </div>
                 <div className="flex items-center gap-2">
@@ -333,10 +419,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   }`} />
                   <span>
                     {isVideoMode
-                      ? '🎥 Kling AI is generating your AI video (this may take a moment)...'
+                      ? '🎥 Kling AI is generating your AI video...'
                       : isImageMode
                       ? '🎨 ShivGpt is generating your AI image...'
-                      : 'SAI (Shiv AI) is thinking...'}
+                      : 'SAI (Shiv AI) is analyzing picture & instructions...'}
                   </span>
                 </div>
               </div>
@@ -364,7 +450,45 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             </div>
           )}
 
+          {/* Attached Image Preview Bar */}
+          {attachedImage && (
+            <div className="flex items-center justify-between p-2 rounded-xl bg-neutral-900 border border-neutral-800 shadow-xl max-w-xs animate-in slide-in-from-bottom-2 duration-200">
+              <div className="flex items-center gap-2 min-w-0">
+                <img src={attachedImage.url} alt="Attached" className="w-10 h-10 object-cover rounded-lg border border-neutral-700" />
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-semibold text-neutral-200 truncate">{attachedImage.title || 'Picture attached'}</div>
+                  <div className="text-[10px] text-orange-400 font-medium">Ready to send with context</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setAttachedImage(null)}
+                className="p-1 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="relative glass-input rounded-2xl shadow-2xl p-2 flex items-end gap-2 bg-[#212121]">
+            {/* Hidden File Input for Picture Upload */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+
+            {/* Upload Attachment Button */}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="p-2 rounded-xl text-neutral-400 hover:text-orange-400 hover:bg-neutral-800 transition-colors flex-shrink-0"
+              title="Attach picture to prompt"
+            >
+              <Paperclip className="w-4 h-4" />
+            </button>
+
             <textarea
               ref={textareaRef}
               rows={1}
@@ -376,15 +500,16 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   ? "Describe the video scene to generate (e.g. 'A cinematic camera shot of sunset on ocean waves')..."
                   : isImageMode
                   ? "Describe the image to generate (e.g. 'A futuristic cyberpunk city at sunset in 8k')..."
-                  : "Message SAI (Shiv AI) or type /video [prompt] or /image [prompt]..."
+                  : "Message SAI (Shiv AI), attach a picture, or type /video [prompt]..."
               }
-              className="w-full bg-transparent text-neutral-100 text-sm placeholder-neutral-500 px-3 py-2 focus:outline-none resize-none max-h-48 leading-relaxed font-sans"
+              className="w-full bg-transparent text-neutral-100 text-sm placeholder-neutral-500 px-2 py-2 focus:outline-none resize-none max-h-48 leading-relaxed font-sans"
             />
+
             <button
               type="submit"
-              disabled={!input.trim() || isLoading}
+              disabled={(!input.trim() && !attachedImage) || isLoading}
               className={`p-2.5 rounded-xl flex items-center justify-center transition-all ${
-                input.trim() && !isLoading
+                (input.trim() || attachedImage) && !isLoading
                   ? isVideoMode
                     ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-950/50'
                     : isImageMode
@@ -398,10 +523,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           </form>
 
           <p className="text-[11px] text-center text-neutral-500">
-            ShivGpt AI Studio • Powered by shivteg
+            ShivGpt AI Studio • Vision & Picture Training • Powered by shivteg
           </p>
         </div>
       </div>
     </div>
   );
 };
+

@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ChatSession, Message, Settings, AuthUser } from '@/lib/types';
+import { ChatSession, Message, Settings, AuthUser, TrainedImageContext } from '@/lib/types';
 import { DEFAULT_SYSTEM_PROMPT, isImageModel, isVideoModel } from '@/lib/groq';
 import { getStoredUser, supabaseSignOut, supabaseHandleAuthCallback } from '@/lib/supabase';
 import { Sidebar } from '@/components/Sidebar';
 import { ChatInterface } from '@/components/ChatInterface';
 import { SettingsModal } from '@/components/SettingsModal';
 import { AuthModal } from '@/components/AuthModal';
+import { TrainImageModal } from '@/components/TrainImageModal';
 import { Zap, CheckCircle } from 'lucide-react';
 
 const DEFAULT_SETTINGS: Settings = {
@@ -27,6 +28,7 @@ export default function Home() {
   const [authChecking, setAuthChecking] = useState<boolean>(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
+  const [isTrainModalOpen, setIsTrainModalOpen] = useState<boolean>(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [authNotification, setAuthNotification] = useState<string | null>(null);
@@ -112,6 +114,28 @@ export default function Home() {
     setActiveSessionId(newSession.id);
   };
 
+  const handleAddTrainedImage = (newImage: TrainedImageContext) => {
+    const existing = currentSession.trainedImages || [];
+    const updatedImages = [...existing, newImage];
+
+    setSessions((prev) =>
+      prev.map((s) =>
+        s.id === activeSessionId ? { ...s, trainedImages: updatedImages } : s
+      )
+    );
+  };
+
+  const handleRemoveTrainedImage = (imageId: string) => {
+    const existing = currentSession.trainedImages || [];
+    const updatedImages = existing.filter((img) => img.id !== imageId);
+
+    setSessions((prev) =>
+      prev.map((s) =>
+        s.id === activeSessionId ? { ...s, trainedImages: updatedImages } : s
+      )
+    );
+  };
+
   const currentSession =
     sessions.find((s) => s.id === activeSessionId) || {
       id: 'temp',
@@ -122,17 +146,21 @@ export default function Home() {
       messages: [],
     };
 
-  const handleSendMessage = async (userText: string) => {
+  const handleSendMessage = async (
+    userText: string,
+    attachedImage?: { url: string; title?: string; context?: string }
+  ) => {
     if (!user) {
       setIsAuthOpen(true);
       return;
     }
-    if (!userText.trim()) return;
+    if (!userText.trim() && !attachedImage) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
       content: userText,
+      attachedImage: attachedImage,
       timestamp: Date.now(),
     };
 
@@ -375,11 +403,13 @@ export default function Home() {
           messages: updatedMessages.map((m) => ({
             role: m.role,
             content: m.content,
+            attachedImage: m.attachedImage,
           })),
           model: selectedModel,
           temperature: settings.temperature,
           maxTokens: settings.maxTokens,
           systemPrompt: settings.systemPrompt,
+          trainedImages: currentSession.trainedImages || [],
           userEmail: user?.email,
         }),
       });
@@ -530,6 +560,15 @@ export default function Home() {
         onRegenerate={handleRegenerate}
         isLoading={isLoading}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        onOpenTrainModal={() => setIsTrainModalOpen(true)}
+      />
+
+      <TrainImageModal
+        isOpen={isTrainModalOpen}
+        onClose={() => setIsTrainModalOpen(false)}
+        trainedImages={currentSession.trainedImages || []}
+        onAddTrainedImage={handleAddTrainedImage}
+        onRemoveTrainedImage={handleRemoveTrainedImage}
       />
 
       <SettingsModal

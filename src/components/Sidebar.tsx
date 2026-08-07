@@ -17,6 +17,7 @@ import {
   LogIn,
   LogOut,
   ShieldCheck,
+  Brain,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -210,7 +211,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         </button>
                       </form>
                     ) : (
-                      <span className="truncate">{session.title}</span>
+                      <span className="truncate flex items-center gap-1.5">
+                        <span className="truncate">{session.title}</span>
+                        {session.trainedImages && session.trainedImages.length > 0 && (
+                          <Brain className="w-3 h-3 text-orange-400 flex-shrink-0" title={`${session.trainedImages.length} picture context memories`} />
+                        )}
+                      </span>
                     )}
                   </div>
 

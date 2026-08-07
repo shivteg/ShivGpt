@@ -1,3 +1,11 @@
+export interface TrainedImageContext {
+  id: string;
+  title: string;
+  context: string;
+  imageUrl: string;
+  createdAt: number;
+}
+
 export interface Message {
   id: string;
   role: 'user' | 'assistant' | 'system';
@@ -7,6 +15,11 @@ export interface Message {
   isImage?: boolean;
   imageUrl?: string;
   imagePrompt?: string;
+  attachedImage?: {
+    url: string;
+    title?: string;
+    context?: string;
+  };
   isVideo?: boolean;
   videoUrl?: string;
   videoPrompt?: string;
@@ -26,6 +39,7 @@ export interface ChatSession {
   updatedAt: number;
   model: string;
   systemPrompt?: string;
+  trainedImages?: TrainedImageContext[];
   messages: Message[];
 }
 
@@ -60,3 +74,4 @@ export interface AuthUser {
   accessToken?: string;
   createdAt?: string;
 }
+
